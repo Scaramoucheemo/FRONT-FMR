@@ -87,7 +87,6 @@ const Home = () => {
           <div className="hidden md:flex items-center gap-6">
             <a href="#" className="text-[#bc004f] font-bold border-b-2 border-[#bc004f] pb-1 transition-all">Inventario</a>
             <a href="#" className="text-slate-500 hover:text-[#bc004f] font-medium transition-colors">Ventas</a>
-            <a href="#" className="text-slate-500 hover:text-[#bc004f] font-medium transition-colors">Notificaciones</a>
           </div>
         </div>
 
@@ -96,7 +95,7 @@ const Home = () => {
             <Search className="w-4 h-4 text-slate-400 mr-2" />
             <input 
               type="text" 
-              placeholder="Nombre o Código..." 
+              placeholder="Buscar medicamento..." 
               className="bg-transparent border-none outline-none text-sm w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -131,7 +130,7 @@ const Home = () => {
                 <Search className="w-4 h-4 text-slate-400 mr-3" />
                 <input 
                   type="text" 
-                  placeholder="Buscar medicamento o sustancia..." 
+                  placeholder="Buscar medicamento..." 
                   className="bg-transparent outline-none text-sm w-full"
                 />
               </div>
@@ -142,74 +141,74 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Stats and Quick Reports */}
+        {/* Stats and Quick Reports - Estilo imagen */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white p-6 rounded-2xl border border-slate-100 flex items-center gap-4 shadow-sm">
-            <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center text-[#bc004f]">
-              <Package className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Productos Totales</p>
-              <p className="text-2xl font-black text-slate-900">1,284</p>
-            </div>
-          </div>
-
-          <div className="bg-[#fff9fb] p-6 rounded-2xl border border-[#f4c2d7]/30 flex items-center gap-4 shadow-sm">
-            <div className="w-12 h-12 rounded-xl bg-[#f4c2d7] flex items-center justify-center text-[#bc004f]">
-              <Calendar className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-[#bc004f] mb-1">Próximos a vencer</p>
-              <p className="text-2xl font-black text-[#bc004f]">12</p>
-            </div>
-          </div>
-
-          <div className="bg-slate-900 p-6 rounded-2xl flex items-center justify-between text-white shadow-xl shadow-slate-200">
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md">
-                <BarChart2 className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center">
+                <Package className="w-6 h-6 text-[#bc004f]" />
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">Reportes</p>
-                <p className="text-lg font-bold">Resumen Diario</p>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Productos Totales</p>
+                <p className="text-2xl font-black text-slate-900">1,284</p>
               </div>
             </div>
-            <ChevronRight className="w-6 h-6 text-slate-400" />
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-[#bc004f]" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Próximos a vencer</p>
+                <p className="text-2xl font-black text-[#bc004f]">12</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group hover:bg-slate-50 transition-colors cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-pink-50 flex items-center justify-center">
+                <BarChart2 className="w-6 h-6 text-[#bc004f]" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide">Reportes</p>
+                <p className="text-sm font-bold text-slate-700">Resumen Diario</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-[#bc004f] transition-colors" />
           </div>
         </div>
 
-        {/* Product Grid */}
+        {/* Product Grid - Estilo imagen */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {products.map((product) => (
-            <div key={product.id} className="group bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div className="relative h-56 overflow-hidden">
+            <div key={product.id} className="group bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300">
+              <div className="relative h-48 overflow-hidden">
                 <img 
                   src={product.image} 
                   alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md text-white px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider">
-                  Stock: {product.stock}
-                </div>
-                {/* Actions Overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                  <button className="bg-white p-3 rounded-full text-[#bc004f] hover:scale-110 active:scale-95 transition-all">
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button className="bg-white p-3 rounded-full text-red-500 hover:scale-110 active:scale-95 transition-all">
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
+                {/* Badge de caducidad si es próxima */}
+                {product.expiry === "Ago 2024" && (
+                  <div className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg">
+                    ¡PRÓXIMO A VENCER!
+                  </div>
+                )}
               </div>
-              <div className="p-6">
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-slate-900 mb-1">{product.name}</h3>
-                  <p className="text-xs text-slate-500 font-medium">{product.description}</p>
+              <div className="p-5">
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-slate-900">{product.name}</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">{product.description}</p>
                 </div>
-                <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                   <div>
-                    <p className="text-[9px] uppercase font-bold text-slate-400 tracking-widest mb-1">Caducidad</p>
-                    <p className="text-xs font-bold text-slate-700">{product.expiry}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Caducidad</p>
+                    <p className={`text-sm font-bold ${product.expiry === "Ago 2024" ? 'text-red-500' : 'text-slate-700'}`}>
+                      {product.expiry}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-black text-[#bc004f]">${product.price}</p>
@@ -220,29 +219,31 @@ const Home = () => {
           ))}
         </div>
 
-        {/* Pagination/Load More */}
-        <div className="mt-16 flex flex-col items-center">
-          <p className="text-xs text-slate-400 mb-6 font-medium tracking-tight">Mostrando 6 de 1,284 productos</p>
-          <button className="px-10 py-3 border border-slate-200 rounded-full text-slate-600 font-bold text-sm hover:bg-[#f4c2d7]/10 hover:border-[#f4c2d7] hover:text-[#bc004f] transition-all">
+        {/* Load More */}
+        <div className="mt-12 text-center">
+          <button className="px-8 py-3 border-2 border-[#bc004f] text-[#bc004f] font-bold rounded-full hover:bg-[#bc004f] hover:text-white transition-all duration-300 text-sm">
             Cargar más productos
           </button>
         </div>
       </main>
 
       {/* Floating Action Button */}
-      <button className="fixed bottom-8 right-8 w-16 h-16 bg-[#f4c2d7] rounded-full flex items-center justify-center text-[#bc004f] shadow-2xl shadow-pink-200 hover:scale-110 active:scale-95 transition-all group z-40">
-        <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
+      <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#bc004f] rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[#a00043] hover:scale-110 transition-all duration-300 group z-40">
+        <Plus className="w-6 h-6" />
       </button>
 
-      {/* Footer */}
-      <footer className="bg-[#f0f0f0] mt-20 py-10 px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">
-          © 2024 Farmacia Médica Rincón. El Atelier Clínico.
-        </p>
-        <div className="flex gap-8">
-          <a href="#" className="text-[10px] font-bold tracking-widest text-slate-500 hover:text-[#bc004f] transition-colors uppercase">Privacidad</a>
-          <a href="#" className="text-[10px] font-bold tracking-widest text-slate-500 hover:text-[#bc004f] transition-colors uppercase">Términos</a>
-          <a href="#" className="text-[10px] font-bold tracking-widest text-slate-500 hover:text-[#bc004f] transition-colors uppercase">Contacto</a>
+      {/* Footer con navegación estilo imagen */}
+      <footer className="bg-white border-t border-slate-100 mt-16 py-6 px-8">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-xs text-slate-400">
+            © 2024 Farmacia Médica Rincón
+          </p>
+          <div className="flex gap-6">
+            <a href="#" className="text-xs text-slate-500 hover:text-[#bc004f] transition-colors">Inventario</a>
+            <a href="#" className="text-xs text-slate-500 hover:text-[#bc004f] transition-colors">Ventas</a>
+            <a href="#" className="text-xs text-slate-500 hover:text-[#bc004f] transition-colors">Perfil</a>
+            <a href="#" className="text-xs text-slate-500 hover:text-[#bc004f] transition-colors">Cerrar sesión</a>
+          </div>
         </div>
       </footer>
     </div>
