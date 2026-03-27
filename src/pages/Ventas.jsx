@@ -947,7 +947,7 @@ const Ventas = () => {
       {/* Footer */}
       <footer className="w-full mt-auto bg-white border-t border-gray-200 flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
         <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          © 2024 Farmacia Médica Rincón. El Atelier Clínico.
+          © 2024 Farmacia Médica Rincón. 
         </p>
         <div className="flex gap-8">
           <a
