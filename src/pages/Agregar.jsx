@@ -265,6 +265,11 @@ const Agregar = () => {
           </button>
         </div>
 
+        {/* FOOTER */}
+      <footer className="text-center py-6 text-sm text-gray-500 border-t">
+        © 2026 Farmacia Médica Rincón
+      </footer>
+
       </main>
     </div>
   );
