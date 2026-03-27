@@ -72,8 +72,7 @@ const Welcome = () => {
           }}>
             {/* Reemplaza la URL con la ruta de tu logo */}
             <img 
-              src="./img/logo-frm.jpeg" // Cambia esta ruta por la de tu imagen
-              alt="Logo Farmacia Médica Rincón"
+              src=".../img/logo.jpeg" // Cambia esta ruta por la de tu imagen
               style={{
                 width: '100%',
                 height: '100%',
