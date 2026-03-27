@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, Bell, Menu, User, LogOut, Scan } from "lucide-react";
+import { Bell, User, LogOut, Scan } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 
 const API_BASE = "http://161.35.234.161/api";
@@ -10,7 +10,6 @@ const Agregar = () => {
   const location = useLocation();
   const product = location.state?.product;
 
-  const [mobileNav, setMobileNav] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [imageFile, setImageFile] = useState(null);
@@ -131,9 +130,9 @@ const Agregar = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f6f2f4]">
+    <div className="min-h-screen bg-[#f6f2f4] flex flex-col">
 
-      {/* NAVBAR (TUYA ORIGINAL) */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold">Farmacia Médica Rincón</h1>
 
@@ -173,7 +172,7 @@ const Agregar = () => {
         </div>
       </nav>
 
-      {/* 🔴 SCANNER */}
+      {/* SCANNER */}
       {isScannerOpen && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
           <div className="relative w-full max-w-md">
@@ -190,7 +189,7 @@ const Agregar = () => {
       )}
 
       {/* MAIN */}
-      <main className="pt-28 px-6 max-w-7xl mx-auto">
+      <main className="flex-grow pt-28 px-6 max-w-7xl mx-auto">
 
         {/* HEADER */}
         <div className="mb-10">
@@ -220,7 +219,7 @@ const Agregar = () => {
               <input type="date" name="fecha" value={form.fecha} onChange={handleChange} className="input md:col-span-2"/>
 
               <div className="md:col-span-2 flex gap-3">
-                <input name="codigo" value={form.codigo} onChange={handleChange} placeholder="Código" className="input flex-1"/>
+                <input name="codigo" value={form.codigo} onChange={handleChange} placeholder="Código de barras" className="input flex-1"/>
                 <button onClick={startScanner} className="bg-[#bc004f] text-white px-4 rounded-xl">
                   <Scan/>
                 </button>
@@ -239,11 +238,11 @@ const Agregar = () => {
                 <input type="file" onChange={handleImage} hidden />
 
                 {preview ? (
-                  <img src={preview} className="rounded-xl w-full"/>
+                  <img src={preview} className="rounded-xl w-full object-cover"/>
                 ) : (
-                  <div>
+                  <div className="text-gray-500">
                     📷
-                    <p>Subir imagen</p>
+                    <p className="mt-2">Subir imagen</p>
                   </div>
                 )}
 
@@ -265,12 +264,13 @@ const Agregar = () => {
           </button>
         </div>
 
-        {/* FOOTER */}
+      </main>
+
+      {/* FOOTER */}
       <footer className="text-center py-6 text-sm text-gray-500 border-t">
         © 2026 Farmacia Médica Rincón
       </footer>
 
-      </main>
     </div>
   );
 };

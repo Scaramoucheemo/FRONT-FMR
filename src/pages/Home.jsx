@@ -79,7 +79,7 @@ const Home = () => {
     codeReader.current = new BrowserMultiFormatReader();
   }, []);
 
-  // 🔴 SCANNER BACKEND
+  // 🔎 SCANNER BACKEND
   const lookupByCode = async (code) => {
     try {
       const res = await fetch(`${API_BASE}/medicamentos?codigo=${code}`);
@@ -116,7 +116,7 @@ const Home = () => {
     }, 300);
   };
 
-  // 🔥 FIX REAL DEL SCANNER
+  // 🔥 FIX SCANNER
   const stopScanner = () => {
     try {
       if (codeReader.current) {
@@ -135,7 +135,6 @@ const Home = () => {
     setIsScannerOpen(false);
   };
 
-  // 🔥 limpiar al desmontar
   useEffect(() => {
     return () => stopScanner();
   }, []);
@@ -187,7 +186,7 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fffbff]">
+    <div className="min-h-screen bg-[#fffbff] flex flex-col">
 
       {/* NAV */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
@@ -219,8 +218,6 @@ const Home = () => {
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-48 p-2">
-
-                {/* MOBILE NAV */}
                 <div className="md:hidden border-b pb-2 mb-2">
                   <button onClick={()=>navigate("/")} className="block w-full text-left p-2">
                     Inventario
@@ -258,7 +255,7 @@ const Home = () => {
       )}
 
       {/* MAIN */}
-      <main className="pt-28 px-6 max-w-7xl mx-auto">
+      <main className="pt-28 px-6 max-w-7xl mx-auto flex-grow">
 
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between gap-6 mb-10">
@@ -334,6 +331,11 @@ const Home = () => {
 
       </main>
 
+      {/* FOOTER 🔥 */}
+      <footer className="text-center py-6 text-sm text-gray-500 border-t mt-10">
+        © 2026 Farmacia Médica Rincón
+      </footer>
+
       {/* FAB */}
       <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3">
         <span className="hidden md:block bg-black text-white text-xs px-3 py-1 rounded-full shadow">
@@ -347,11 +349,6 @@ const Home = () => {
           <Plus />
         </button>
       </div>
-
-      {/* FOOTER */}
-      <footer className="text-center py-6 text-sm text-gray-500 border-t">
-        © 2026 Farmacia Médica Rincón
-      </footer>
 
     </div>
   );
