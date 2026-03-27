@@ -4,8 +4,9 @@ import Welcome from "./pages/Welcome";
 import Login from "./pages/Login";
 import Registration from "./pages/Registration";
 import Account from "./pages/Account";
-import Home from "./pages/home";
+import Home from "./pages/Home";
 import Alerts from "./pages/Alerts";
+import Agregar from "./pages/Agregar";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <Route path="/cuenta" element={<Account />} />
       <Route path="/home" element={<Home />} />
       <Route path="/alerts" element={<Alerts />} />
+      <Route path="/Agregar" element={<Agregar />} />
 
     </Routes>
   );

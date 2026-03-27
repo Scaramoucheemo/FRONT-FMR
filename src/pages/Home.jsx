@@ -1,372 +1,352 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Search, 
-  Bell, 
-  Plus, 
-  Calendar, 
-  Package, 
+import React, { useState, useRef, useEffect } from "react";
+import {
+  Search,
+  Bell,
+  Plus,
   Scan,
+  Menu,
+  Pencil,
+  Trash2,
   User,
   LogOut
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import logoImage from '../assets/logo.png';
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BrowserMultiFormatReader } from "@zxing/browser";
+
+const API_BASE = "http://161.35.234.161/api";
 
 const Home = () => {
-
   const navigate = useNavigate();
-  const menuRef = useRef(null);
-
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [visibleProducts, setVisibleProducts] = useState(3);
 
   const videoRef = useRef(null);
-  const [stream, setStream] = useState(null);
+  const codeReader = useRef(null);
+  const menuRef = useRef(null);
 
-  const [userProfile] = useState(() => {
-    return localStorage.getItem('userProfile') 
-      || 'https://ui-avatars.com/api/?name=Usuario&background=f4c2d7&color=bc004f';
-  });
+  const [products, setProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
-  const [products] = useState([
-    {
-      id: 1,
-      name: "Amoxicilina Duo",
-      description: "Amoxicilina + Ácido Clavulánico",
-      expiry: "2025-12-15",
-      price: "450.00",
-      image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae"
-    },
-    {
-      id: 2,
-      name: "Tussin Relief",
-      description: "Dextrometorfano Jarabe",
-      expiry: "2024-08-20",
-      price: "185.50",
-      image: "https://images.unsplash.com/photo-1563306406-e66174fa3787"
-    },
-    {
-      id: 3,
-      name: "Paracetamol 500mg",
-      description: "Acetaminofén",
-      expiry: "2027-05-10",
-      price: "45.00",
-      image: "https://images.unsplash.com/photo-1550572566-9592774028b0"
-    },
-    {
-      id: 4,
-      name: "Ibuprofeno 400mg",
-      description: "Antiinflamatorio",
-      expiry: "2026-03-01",
-      price: "78.50",
-      image: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88"
-    }
-  ]);
-
-  const totalProducts = products.length;
-
-  const calculateExpiringSoon = () => {
-    const today = new Date();
-    const threeMonthsLater = new Date();
-    threeMonthsLater.setMonth(today.getMonth() + 3);
-
-    return products.filter(product => {
-      const expiryDate = new Date(product.expiry);
-      return expiryDate <= threeMonthsLater && expiryDate >= today;
-    }).length;
-  };
-
-  const expiringSoon = calculateExpiringSoon();
-
-  const startScanner = async () => {
+  // 🔥 FETCH PRODUCTOS
+  const fetchProducts = async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
-      });
-      setStream(mediaStream);
+      const res = await fetch(`${API_BASE}/medicamentos`);
+      const data = await res.json();
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
-      }
+      const mapped = data.map((p, i) => ({
+        id: p.id || i,
+        name: p.nombre,
+        code: p.codigo,
+        description: p.descripcion,
+        expiry: p.fecha,
+        price: p.precio,
+        stock: p.stock,
+        image:
+          p.imagen ||
+          "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae"
+      }));
 
-      setIsScannerOpen(true);
-    } catch {
-      alert('No se pudo acceder a la cámara');
+      setProducts(mapped);
+    } catch (err) {
+      console.error(err);
     }
-  };
-
-  const stopScanner = () => {
-    if (stream) stream.getTracks().forEach(track => track.stop());
-    setIsScannerOpen(false);
   };
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
+    fetchProducts();
+  }, []);
+
+  // 🔥 USER (avatar dinámico)
+  useEffect(() => {
+    const savedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (savedUser) {
+      setUser(savedUser);
+    } else {
+      fetch(`${API_BASE}/user/profile`)
+        .then(res => res.json())
+        .then(data => {
+          setUser(data);
+          localStorage.setItem("user", JSON.stringify(data));
+        })
+        .catch(() => {});
+    }
+  }, []);
+
+  // 🔧 INIT SCANNER
+  useEffect(() => {
+    codeReader.current = new BrowserMultiFormatReader();
+  }, []);
+
+  // 🔴 SCANNER BACKEND
+  const lookupByCode = async (code) => {
+    try {
+      const res = await fetch(`${API_BASE}/medicamentos?codigo=${code}`);
+      const data = await res.json();
+
+      if (data && data.length > 0) {
+        alert("Producto encontrado: " + data[0].nombre);
+      } else {
+        alert("No existe en backend");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const startScanner = () => {
+    setIsScannerOpen(true);
+
+    setTimeout(() => {
+      if (!videoRef.current) return;
+
+      codeReader.current.decodeFromVideoDevice(
+        null,
+        videoRef.current,
+        (result) => {
+          if (result) {
+            const code = result.getText();
+            setSearchTerm(code);
+            stopScanner();
+            lookupByCode(code);
+          }
+        }
+      );
+    }, 300);
+  };
+
+  // 🔥 FIX REAL DEL SCANNER
+  const stopScanner = () => {
+    try {
+      if (codeReader.current) {
+        codeReader.current.reset();
+        codeReader.current = new BrowserMultiFormatReader();
+      }
+
+      if (videoRef.current && videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null;
+      }
+    } catch (err) {
+      console.error("Error al cerrar scanner:", err);
+    }
+
+    setIsScannerOpen(false);
+  };
+
+  // 🔥 limpiar al desmontar
+  useEffect(() => {
+    return () => stopScanner();
+  }, []);
+
+  // 🗑 DELETE
+  const handleDelete = async (id) => {
+    const confirmDelete = window.confirm(
+      "¿Seguro que deseas eliminar este producto?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await fetch(`${API_BASE}/medicamentos/${id}`, {
+        method: "DELETE"
+      });
+
+      alert("Eliminado correctamente");
+      fetchProducts();
+    } catch (err) {
+      console.error(err);
+      alert("Error al eliminar");
+    }
+  };
+
+  const filteredProducts = products.filter(p =>
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.code?.includes(searchTerm)
+  );
+
+  const totalProducts = products.length;
+
+  const expiringSoon = products.filter(p => {
+    const today = new Date();
+    const future = new Date();
+    future.setMonth(today.getMonth() + 3);
+    const exp = new Date(p.expiry);
+    return exp >= today && exp <= future;
+  }).length;
+
+  // cerrar menú
+  useEffect(() => {
+    const close = e => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setIsMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/welcome');
-  };
-
-  const filteredProducts = products
-    .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-    .slice(0, visibleProducts);
-
   return (
-    <div className="min-h-screen bg-[#f7f7f8] flex flex-col">
+    <div className="min-h-screen bg-[#fffbff]">
 
-      {/* NAVBAR */}
-      <nav className="fixed top-0 w-full bg-white border-b px-6 py-3 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+      {/* NAV */}
+      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
+        <h1 className="font-bold">Farmacia Médica Rincón</h1>
 
-          {/* LOGO */}
-          <div className="flex items-center gap-3">
-            <img src={logoImage} className="w-10 h-10"/>
-            <h1 className="font-semibold">Farmacia Médica Rincón</h1>
-          </div>
+        <div className="hidden md:flex gap-6">
+          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
+            Inventario
+          </span>
+          <span onClick={()=>navigate("/ventas")} className="cursor-pointer">
+            Ventas
+          </span>
+        </div>
 
-          {/* DESKTOP */}
-          <div className="hidden md:flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <Bell />
 
-            <button className="font-semibold border-b-2 border-[#bc004f] pb-1">
-              Inventario
-            </button>
+          {/* USER */}
+          <div ref={menuRef} className="relative">
+            <img
+              src={
+                user?.imagen
+                  ? user.imagen
+                  : `https://ui-avatars.com/api/?name=${user?.nombre || "User"}`
+              }
+              className="w-9 h-9 rounded-full cursor-pointer object-cover"
+              onClick={()=>setIsMenuOpen(!isMenuOpen)}
+            />
 
-            <button 
-              onClick={()=>navigate('/ventas')}
-              className="text-gray-500 hover:text-black"
-            >
-              Ventas
-            </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-48 p-2">
 
-            <div className="flex items-center bg-gray-100 px-3 py-1 rounded-full w-72">
-              <Search className="w-4 h-4 text-gray-400"/>
-              <input
-                type="text"
-                placeholder="Nombre o código..."
-                className="bg-transparent outline-none ml-2 w-full text-sm"
-                onChange={(e)=>setSearchTerm(e.target.value)}
-              />
-            </div>
-
-          </div>
-
-          {/* MOBILE BUTTON */}
-          <button 
-            onClick={()=>setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2"
-          >
-            ☰
-          </button>
-
-          {/* DERECHA */}
-          <div className="flex items-center gap-4">
-
-            <button onClick={()=>navigate('/alerts')}>
-              <Bell className="w-5 h-5 text-gray-600"/>
-            </button>
-
-            <div className="relative" ref={menuRef}>
-              <img 
-                src={userProfile} 
-                className="w-9 h-9 rounded-full cursor-pointer"
-                onClick={()=>setIsMenuOpen(!isMenuOpen)}
-              />
-
-              {isMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border p-2">
-                  
-                  <button 
-                    onClick={()=>navigate('/config')}
-                    className="flex items-center gap-2 w-full px-3 py-2 hover:bg-gray-100 rounded-lg"
-                  >
-                    <User className="w-4 h-4"/>
-                    Configuración
+                {/* MOBILE NAV */}
+                <div className="md:hidden border-b pb-2 mb-2">
+                  <button onClick={()=>navigate("/")} className="block w-full text-left p-2">
+                    Inventario
                   </button>
-
-                  <button 
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg"
-                  >
-                    <LogOut className="w-4 h-4"/>
-                    Cerrar sesión
+                  <button onClick={()=>navigate("/ventas")} className="block w-full text-left p-2">
+                    Ventas
                   </button>
-
                 </div>
-              )}
-            </div>
 
+                <button onClick={()=>navigate("/config")} className="flex gap-2 p-2 w-full">
+                  <User size={16}/> Configuración
+                </button>
+                <button onClick={()=>navigate("/welcome")} className="flex gap-2 p-2 text-red-500 w-full">
+                  <LogOut size={16}/> Cerrar sesión
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </nav>
 
-      {/* MOBILE DROPDOWN */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b px-6 py-4 space-y-4 mt-16">
-
-          <button className="block w-full text-left font-semibold">
-            Inventario
-          </button>
-
-          <button 
-            onClick={()=>navigate('/ventas')}
-            className="block w-full text-left text-gray-600"
-          >
-            Ventas
-          </button>
-
-          <button 
-            onClick={()=>navigate('/alerts')}
-            className="block w-full text-left text-gray-600"
-          >
-            Alertas
-          </button>
-
-          <div className="flex items-center bg-gray-100 px-3 py-2 rounded-lg">
-            <Search className="w-4 h-4 text-gray-400"/>
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="bg-transparent outline-none ml-2 w-full"
-              onChange={(e)=>setSearchTerm(e.target.value)}
-            />
+      {/* SCANNER */}
+      {isScannerOpen && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+          <div className="relative w-full max-w-md">
+            <video ref={videoRef} className="w-full rounded-xl" />
+            <button
+              onClick={stopScanner}
+              className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full"
+            >
+              ✕
+            </button>
           </div>
-
         </div>
       )}
 
       {/* MAIN */}
-      <main className="pt-24 px-6 max-w-7xl mx-auto flex-1">
+      <main className="pt-28 px-6 max-w-7xl mx-auto">
 
         {/* HEADER */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-10 gap-6">
-
-          <div>
-            <span className="text-xs bg-pink-100 text-[#bc004f] px-3 py-1 rounded-full">
-              GESTIÓN DE STOCK
-            </span>
-
-            <h1 className="text-5xl font-bold mt-4">
-              Inventario General
-            </h1>
-          </div>
+        <div className="flex flex-col md:flex-row justify-between gap-6 mb-10">
+          <h1 className="text-5xl font-extrabold">Inventario General</h1>
 
           <div className="flex gap-3">
-            <div className="flex items-center bg-white border rounded-xl px-4 py-2 w-72">
-              <Search className="w-4 h-4 text-gray-400"/>
+            <div className="flex items-center bg-gray-100 px-4 py-3 rounded-full">
+              <Search />
               <input
-                type="text"
-                placeholder="Buscar medicamento..."
-                className="ml-2 outline-none w-full"
+                className="ml-2 bg-transparent outline-none"
+                placeholder="Buscar..."
                 onChange={(e)=>setSearchTerm(e.target.value)}
               />
             </div>
 
-            <button 
-              onClick={startScanner}
-              className="bg-[#bc004f] text-white px-5 rounded-xl flex items-center"
-            >
-              <Scan/>
+            <button onClick={startScanner} className="bg-[#bc004f] text-white w-14 h-14 rounded-xl flex items-center justify-center">
+              <Scan />
             </button>
           </div>
-
         </div>
 
-        {/* CARDS */}
+        {/* STATS */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
-
-          <div className="bg-white p-6 rounded-2xl border flex items-center gap-4">
-            <Package className="text-[#bc004f]"/>
-            <div>
-              <p className="text-xs text-gray-500">PRODUCTOS TOTALES</p>
-              <h2 className="text-3xl font-bold">{totalProducts}</h2>
-            </div>
+          <div className="bg-white p-6 rounded-2xl">
+            <h2 className="text-3xl font-bold">{totalProducts}</h2>
+            <p className="text-xs text-gray-400">PRODUCTOS</p>
           </div>
 
-          <div className="bg-white p-6 rounded-2xl border flex items-center gap-4">
-            <Calendar className="text-red-500"/>
-            <div>
-              <p className="text-xs text-gray-500">PRÓXIMOS A VENCER</p>
-              <h2 className="text-3xl font-bold text-red-500">{expiringSoon}</h2>
-            </div>
+          <div className="bg-pink-50 p-6 rounded-2xl">
+            <h2 className="text-3xl font-bold text-red-500">{expiringSoon}</h2>
+            <p className="text-xs text-red-500">POR VENCER</p>
           </div>
 
-          <div className="bg-black text-white p-6 rounded-2xl flex justify-between items-center">
-            <div>
-              <p className="text-xs opacity-70">REPORTES</p>
-              <h2>Resumen Diario</h2>
-            </div>
-            →
+          <div className="bg-black text-white p-6 rounded-2xl">
+            Resumen Diario
           </div>
-
         </div>
 
-        {/* PRODUCTOS */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-2xl border overflow-hidden">
-              <img src={product.image} className="h-44 w-full object-cover"/>
-              <div className="p-4">
-                <h3 className="font-bold">{product.name}</h3>
-                <p className="text-sm text-gray-500">{product.description}</p>
+        {/* GRID */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredProducts.map(p => (
+            <div key={p.id} className="group bg-white rounded-3xl shadow overflow-hidden relative">
+
+              <img src={p.image} className="w-full h-52 object-cover" />
+
+              <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-xs font-bold">
+                Stock: {p.stock}
+              </div>
+
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition">
+                <button onClick={()=>navigate("/agregar", { state: { product: p } })} className="bg-white p-3 rounded-full">
+                  <Pencil size={18}/>
+                </button>
+
+                <button onClick={()=>handleDelete(p.id)} className="bg-white p-3 rounded-full hover:bg-red-500 hover:text-white">
+                  <Trash2 size={18}/>
+                </button>
+              </div>
+
+              <div className="p-5">
+                <h3 className="font-bold">{p.name}</h3>
+                <p className="text-sm text-gray-500">{p.description}</p>
+
                 <div className="flex justify-between mt-4">
-                  <span>{new Date(product.expiry).toLocaleDateString()}</span>
-                  <span className="text-[#bc004f] font-bold">${product.price}</span>
+                  <span>{new Date(p.expiry).toLocaleDateString()}</span>
+                  <span className="text-[#bc004f] font-bold">${p.price}</span>
                 </div>
               </div>
+
             </div>
           ))}
         </div>
 
-        {/* LOAD MORE */}
-        {visibleProducts < products.length && (
-          <div className="text-center mt-8">
-            <button 
-              onClick={()=>setVisibleProducts(v => v + 3)}
-              className="px-6 py-2 border rounded-xl hover:bg-gray-100"
-            >
-              Cargar más
-            </button>
-          </div>
-        )}
-
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-white border-t text-center py-4 text-sm text-gray-500">
-        © 2026 Farmacia Médica Rincón — Sistema de Inventario
-      </footer>
+      {/* FAB */}
+      <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3">
+        <span className="hidden md:block bg-black text-white text-xs px-3 py-1 rounded-full shadow">
+          Nuevo
+        </span>
 
-      {/* SCANNER */}
-      {isScannerOpen && (
-        <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg overflow-hidden w-full max-w-md">
-            <video ref={videoRef} className="w-full h-80 object-cover" autoPlay/>
-            <button onClick={stopScanner} className="p-3 bg-red-500 text-white w-full">
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* FLOAT BUTTON */}
-      <button 
-        onClick={() => navigate('/agregar')}
-        className="fixed bottom-20 right-6 md:bottom-6 md:right-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 bg-[#bc004f] w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg"
-      >
-        <Plus/>
-      </button>
+        <button
+          onClick={()=>navigate("/agregar")}
+          className="bg-[#bc004f] w-16 h-16 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-110 transition"
+        >
+          <Plus />
+        </button>
+      </div>
 
     </div>
   );
