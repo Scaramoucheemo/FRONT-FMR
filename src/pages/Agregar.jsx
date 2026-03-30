@@ -109,7 +109,7 @@ const Agregar = () => {
     };
   }, []);
 
-  // 🔴 SCANNER
+  // SCANNER
   const startScanner = () => {
     setIsScannerOpen(true);
     
@@ -167,7 +167,7 @@ const Agregar = () => {
     setIsScannerOpen(false);
   };
 
-  // 📷 IMAGEN
+  //  IMAGEN
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -216,7 +216,7 @@ const Agregar = () => {
     return true;
   };
 
-  // 💾 GUARDAR
+  //  GUARDAR
   const handleSubmit = async () => {
     if (!validateForm()) return;
     
@@ -315,7 +315,7 @@ const Agregar = () => {
 
         <div className="hidden md:flex gap-6">
           <span 
-            onClick={() => navigate("/")} 
+            onClick={() => navigate("/home")} 
             className="cursor-pointer hover:text-[#bc004f] transition-colors"
           >
             Inventario
@@ -332,7 +332,7 @@ const Agregar = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell className="cursor-pointer hover:text-[#bc004f] transition-colors" />
+          <Bell onClick={() => navigate("/alerts")} className="cursor-pointer hover:text-[#bc004f] transition-colors" />
 
           <div ref={menuRef} className="relative">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -361,7 +361,7 @@ const Agregar = () => {
                 <div className="md:hidden border-b mb-2 pb-2">
                   <button
                     onClick={() => {
-                      navigate("/");
+                      navigate("/home");
                       setIsMenuOpen(false);
                     }}
                     className="block w-full text-left p-2 hover:bg-gray-100 rounded-lg"
@@ -685,7 +685,7 @@ const Agregar = () => {
       {/* FOOTER */}
       <footer className="w-full mt-auto bg-white border-t border-gray-200 flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
         <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          © 2024 Farmacia Médica Rincón. 
+          © 2026 Farmacia Médica Rincón. 
         </p>
         <div className="flex gap-8">
           <a

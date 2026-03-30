@@ -34,7 +34,7 @@ const Home = () => {
   const [success, setSuccess] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // 🔥 FETCH PRODUCTOS
+  //  FETCH PRODUCTOS
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -73,7 +73,7 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  // 🔥 USER (avatar dinámico)
+  //  USER (avatar dinámico)
   useEffect(() => {
     loadCurrentUser();
   }, []);
@@ -122,7 +122,7 @@ const Home = () => {
     }
   };
 
-  // 🔧 INIT SCANNER
+  //  INIT SCANNER
   useEffect(() => {
     try {
       codeReader.current = new BrowserMultiFormatReader();
@@ -148,7 +148,7 @@ const Home = () => {
     };
   }, []);
 
-  // 🔎 SCANNER BACKEND
+  //  SCANNER BACKEND
   const lookupByCode = async (code) => {
     try {
       setLoading(true);
@@ -227,7 +227,7 @@ const Home = () => {
     }, 300);
   };
 
-  // 🔥 FIX SCANNER
+  //  FIX SCANNER
   const stopScanner = () => {
     try {
       if (codeReader.current) {
@@ -277,12 +277,12 @@ const Home = () => {
     }
   };
 
-  // ✏️ EDIT
+  // EDIT
   const handleEdit = (product) => {
     navigate("/agregar", { state: { product, isEditing: true } });
   };
 
-  // 🔍 Buscar producto manualmente
+  //  Buscar producto manualmente
   const handleSearch = () => {
     if (searchTerm.trim()) {
       const product = products.find(p => 
@@ -299,7 +299,7 @@ const Home = () => {
     }
   };
 
-  // 🚪 Cerrar sesión
+  //  Cerrar sesión
   const handleLogout = () => {
     if (window.confirm("¿Está seguro de cerrar sesión?")) {
       localStorage.removeItem("token");
@@ -308,7 +308,7 @@ const Home = () => {
     }
   };
 
-  // 🏷️ Manejar tecla Enter en búsqueda
+  //  Manejar tecla Enter en búsqueda
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -362,7 +362,7 @@ const Home = () => {
 
         <div className="hidden md:flex gap-6">
           <span 
-            onClick={() => navigate("/")} 
+            onClick={() => navigate("/home")} 
             className="text-[#bc004f] font-bold cursor-pointer border-b-2 border-[#bc004f]"
           >
             Inventario
@@ -376,7 +376,7 @@ const Home = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell className="cursor-pointer hover:text-[#bc004f] transition-colors" />
+          <Bell onClick={() => navigate("/alerts")} className="cursor-pointer hover:text-[#bc004f] transition-colors" />
 
           {/* USER */}
           <div ref={menuRef} className="relative">
@@ -631,7 +631,7 @@ const Home = () => {
       {/* FOOTER */}
       <footer className="w-full mt-auto bg-white border-t border-gray-200 flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
         <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          © 2024 Farmacia Médica Rincón. 
+          © 2026 Farmacia Médica Rincón. 
         </p>
         <div className="flex gap-8">
           <a

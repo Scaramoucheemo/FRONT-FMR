@@ -1,218 +1,221 @@
-import { useState } from "react";
-import {
-  IoHome,
-  IoNotifications,
-  IoPerson,
-  IoReceipt,
-  IoEye,
-  IoEyeOff,
-  IoMail,
-  IoCalendar,
-  IoArrowBack,
-} from "react-icons/io5";
+import React, { useState, useRef, useEffect } from "react";
+import { Bell, User, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const API_BASE = "http://161.35.234.161/api";
 
 const Account = () => {
-  const [activeNav, setActiveNav] = useState("profile");
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
 
-  const userData = {
-    firstName: "Juan",
-    lastName: "Pérez García",
-    email: "juan.perez@email.com",
-    password: "password123",
-    birthDate: "05/12/1990",
-    phone: "5512345678",
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  const [alerts, setAlerts] = useState(true);
+
+  const sectionsRef = {
+    personal: useRef(null),
+    security: useRef(null),
+    preferences: useRef(null),
+    danger: useRef(null)
+  };
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) setUser(JSON.parse(savedUser));
+  }, []);
+
+  // cerrar menú
+  useEffect(() => {
+    const close = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  //  scroll interno
+  const scrollTo = (section) => {
+    sectionsRef[section].current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  //  eliminar cuenta
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("¿Seguro que deseas eliminar tu cuenta?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/user`, {
+        method: "DELETE"
+      });
+
+      if (res.ok) {
+        alert("Cuenta eliminada correctamente");
+        handleLogout();
+      } else {
+        alert("Error al eliminar cuenta");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error del servidor");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-[#f7f7f8] flex flex-col">
 
-      {/* NAV SUPERIOR */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around py-3 z-50">
-        {[
-          { key: "home", icon: <IoHome />, label: "HOME" },
-          { key: "sales", icon: <IoReceipt />, label: "SALES" },
-          { key: "alerts", icon: <IoNotifications />, label: "ALERTS" },
-          { key: "profile", icon: <IoPerson />, label: "PROFILE" },
-        ].map((item) => (
-          <button
-            key={item.key}
-            onClick={() => setActiveNav(item.key)}
-            className={`flex flex-col items-center text-xs ${
-              activeNav === item.key
-                ? "text-black font-bold bg-pink-100 px-3 py-1 rounded-xl"
-                : "text-slate-400"
-            }`}
-          >
-            {item.icon}
-            {item.label}
-          </button>
-        ))}
-      </div>
+      {/*  NAVBAR EXACTO */}
+      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
+        <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
-      {/* CONTENEDOR */}
-      <div className="max-w-3xl mx-auto bg-white min-h-screen shadow-lg">
-
-        {/* HEADER */}
-        <div className="flex items-center p-4 border-b">
-          <IoArrowBack size={22} className="cursor-pointer" />
-          <h2 className="flex-1 text-center font-bold text-lg">
-            Farmacia Médica Rincón
-          </h2>
+        <div className="hidden md:flex gap-6">
+          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f]">Inventario</span>
+          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f]">Ventas</span>
         </div>
 
-        {/* PERFIL */}
-        <div className="p-6 flex flex-col md:flex-row items-center gap-4">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-pink-100 flex items-center justify-center text-3xl">
-              👤
-            </div>
-          </div>
+        <div className="flex items-center gap-4">
+          <Bell onClick={() => navigate("/alerts")} className="cursor-pointer hover:text-[#bc004f]" />
 
-          <div className="text-center md:text-left">
-            <h3 className="text-2xl font-bold">
-              ¡Hola!{" "}
-              <span className="text-slate-500">
-                {userData.firstName}
-              </span>
-            </h3>
-            <p className="text-sm text-slate-500">
-              Gestiona los detalles de tu cuenta
-            </p>
-          </div>
-        </div>
-
-        {/* FORMULARIO */}
-        <div className="px-6 pb-24 space-y-4">
-
-          <p className="text-xs font-bold text-slate-400 tracking-widest">
-            DATOS GENERALES
-          </p>
-
-          {/* INPUT */}
-          <Input label="NOMBRE" defaultValue={userData.firstName} />
-          <Input label="APELLIDO" defaultValue={userData.lastName} />
-
-          {/* EMAIL */}
-          <div>
-            <label className="label">CORREO</label>
-            <div className="input-icon">
-              <input type="email" defaultValue={userData.email} />
-              <IoMail />
-            </div>
-          </div>
-
-          {/* PASSWORD */}
-          <div>
-            <label className="label">CONTRASEÑA</label>
-            <div className="input-icon">
-              <input
-                type={showPassword ? "text" : "password"}
-                defaultValue={userData.password}
+          <div ref={menuRef} className="relative">
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              <img
+                src={`https://ui-avatars.com/api/?name=${user?.nombre || "User"}&background=bc004f&color=fff`}
+                className="w-9 h-9 rounded-full"
               />
-              <span onClick={() => setShowPassword(!showPassword)}>
-                {showPassword ? <IoEyeOff /> : <IoEye />}
+              <span className="hidden md:block text-sm">
+                {user?.nombre?.split(" ")[0] || "Usuario"}
               </span>
             </div>
-          </div>
 
-          {/* FECHA */}
-          <div>
-            <label className="label">FECHA DE NACIMIENTO</label>
-            <div className="input-icon">
-              <input defaultValue={userData.birthDate} />
-              <IoCalendar />
-            </div>
-          </div>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
 
-          {/* TELÉFONO */}
-          <div>
-            <label className="label">TELÉFONO</label>
-            <div className="flex gap-2">
-              <div className="input w-20 text-center">+52</div>
-              <input
-                className="input flex-1"
-                defaultValue={userData.phone}
-              />
-            </div>
-          </div>
+                {/*  MOBILE NAV */}
+                <div className="md:hidden border-b mb-2 pb-2">
+                  <button onClick={() => navigate("/home")} className="block w-full text-left p-2 hover:bg-gray-100 rounded-lg">
+                    Inventario
+                  </button>
+                  <button onClick={() => navigate("/ventas")} className="block w-full text-left p-2 hover:bg-gray-100 rounded-lg">
+                    Ventas
+                  </button>
+                </div>
 
-          {/* SELECT */}
-          <div>
-            <label className="label">ROL</label>
-            <select className="input">
-              <option>Médico</option>
-              <option>Administrador</option>
-              <option>Farmacéutico</option>
-            </select>
-          </div>
+                <button onClick={() => navigate("/config")} className="flex gap-2 p-2 w-full hover:bg-gray-100 rounded-lg">
+                  <User size={16}/> Configuración
+                </button>
 
-          {/* BOTONES */}
-          <button className="btn-primary">Guardar</button>
-          <button className="btn-secondary">Cerrar sesión</button>
+                <button onClick={handleLogout} className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg">
+                  <LogOut size={16}/> Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </nav>
 
-      {/* ESTILOS reutilizables */}
-      <style>{`
-        .label {
-          font-size: 12px;
-          font-weight: bold;
-          color: #64748b;
-          margin-bottom: 4px;
-          display: block;
-        }
+      {/* MAIN */}
+      <main className="pt-28 px-6 max-w-6xl mx-auto w-full flex-grow">
 
-        .input {
-          width: 100%;
-          padding: 12px;
-          border-radius: 12px;
-          background: #f1f5f9;
-          outline: none;
-        }
+        <h1 className="text-4xl font-extrabold mb-8">Account Settings</h1>
 
-        .input-icon {
-          display: flex;
-          align-items: center;
-          background: #f1f5f9;
-          border-radius: 12px;
-          padding: 0 10px;
-        }
+        <div className="grid lg:grid-cols-12 gap-10">
 
-        .input-icon input {
-          flex: 1;
-          padding: 12px;
-          background: transparent;
-          outline: none;
-        }
+          {/* SIDEBAR */}
+          <aside className="hidden lg:block col-span-3 space-y-2">
+            <div onClick={() => scrollTo("personal")} className="bg-[#ffe4e7] text-[#bc004f] px-4 py-3 rounded-xl cursor-pointer">
+              Personal info
+            </div>
+            <div onClick={() => scrollTo("security")} className="px-4 py-3 hover:bg-white rounded-xl cursor-pointer">
+              Security
+            </div>
+            <div onClick={() => scrollTo("preferences")} className="px-4 py-3 hover:bg-white rounded-xl cursor-pointer">
+              Preferences
+            </div>
+            <div onClick={() => scrollTo("danger")} className="px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer">
+              Danger Zone
+            </div>
+          </aside>
 
-        .btn-primary {
-          width: 100%;
-          background: #f472b6;
-          padding: 14px;
-          border-radius: 12px;
-          font-weight: bold;
-          color: black;
-        }
+          {/* CONTENT */}
+          <div className="col-span-9 space-y-10">
 
-        .btn-secondary {
-          width: 100%;
-          background: #1e293b;
-          padding: 14px;
-          border-radius: 12px;
-          font-weight: bold;
-          color: white;
-        }
-      `}</style>
+            {/* PERSONAL */}
+            <section ref={sectionsRef.personal} className="bg-white p-8 rounded-2xl">
+              <h2 className="font-bold mb-4">Personal Information</h2>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <input className="bg-gray-100 p-3 rounded-lg" defaultValue={user?.nombre || ""} placeholder="Nombre" />
+                <input className="bg-gray-100 p-3 rounded-lg" placeholder="Cargo" />
+                <input className="bg-gray-100 p-3 rounded-lg" placeholder="Teléfono" />
+                <input type="date" className="bg-gray-100 p-3 rounded-lg" />
+
+                <div className="md:col-span-2 text-sm text-gray-500">
+                  Aquí podrás gestionar información adicional de tu perfil en futuras versiones.
+                </div>
+              </div>
+            </section>
+
+            {/* SECURITY */}
+            <section ref={sectionsRef.security} className="bg-white p-8 rounded-2xl">
+              <h2 className="font-bold mb-4">Security</h2>
+              <p className="text-gray-500 text-sm">
+                Aquí podrás cambiar tu contraseña y gestionar accesos próximamente.
+              </p>
+            </section>
+
+            {/* PREFERENCES */}
+            <section ref={sectionsRef.preferences} className="bg-white p-8 rounded-2xl">
+              <h2 className="font-bold mb-4">Preferences</h2>
+
+              <div className="flex justify-between items-center">
+                <span>Inventory Low-Stock Alerts</span>
+
+                <div
+                  onClick={() => setAlerts(!alerts)}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer ${
+                    alerts ? "bg-[#bc004f]" : "bg-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`bg-white w-5 h-5 rounded-full shadow transform ${
+                      alerts ? "translate-x-6" : ""
+                    }`}
+                  />
+                </div>
+              </div>
+            </section>
+
+            {/* DANGER */}
+            <section ref={sectionsRef.danger} className="border border-red-300 bg-red-50 p-6 rounded-xl">
+              <h2 className="text-red-500 font-bold mb-2">Danger Zone</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Eliminar tu cuenta borrará todos tus datos permanentemente.
+              </p>
+
+              <button
+                onClick={handleDeleteAccount}
+                className="border border-red-500 text-red-500 px-4 py-2 rounded-lg hover:bg-red-500 hover:text-white"
+              >
+                Desactivar Cuenta
+              </button>
+            </section>
+
+          </div>
+        </div>
+      </main>
+
+      {/* FOOTER */}
+      <footer className="bg-white border-t py-6 text-center text-sm text-gray-500">
+        © 2026 Farmacia Médica Rincón
+      </footer>
     </div>
   );
 };
-
-const Input = ({ label, ...props }) => (
-  <div>
-    <label className="label">{label}</label>
-    <input className="input" {...props} />
-  </div>
-);
 
 export default Account;

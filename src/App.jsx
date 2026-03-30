@@ -16,7 +16,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Welcome />} />
       <Route path="/login" element={<Auth />} />
-      <Route path="/cuenta" element={<Account />} />
+      <Route path="/config" element={<Account />} />
       <Route path="/home" element={<Home />} />
       <Route path="/alerts" element={<Alerts />} />
       <Route path="/Agregar" element={<Agregar />} />

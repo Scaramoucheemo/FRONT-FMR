@@ -557,10 +557,11 @@ const Ventas = () => {
     <div className="min-h-screen bg-[#fffbff] flex flex-col">
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
-        <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
+        <h1  onClick={() => navigate("/home")}
+          className="font-bold text-lg cursor-pointer"className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/")} className="cursor-pointer hover:text-[#bc004f] transition-colors">
+          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f] transition-colors">
             Inventario
           </span>
           <span onClick={() => navigate("/ventas")} className="text-[#bc004f] font-bold">
@@ -569,7 +570,7 @@ const Ventas = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell className="cursor-pointer hover:text-[#bc004f] transition-colors" />
+          <Bell onClick={() => navigate("/alerts")} className="cursor-pointer hover:text-[#bc004f] transition-colors" />
 
           <div ref={menuRef} className="relative">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -593,7 +594,7 @@ const Ventas = () => {
                 <div className="md:hidden border-b mb-2 pb-2">
                   <button
                     onClick={() => {
-                      navigate("/Home");
+                      navigate("/home");
                       setIsMenuOpen(false);
                     }}
                     className="block w-full text-left p-2 hover:bg-gray-100 rounded-lg"
@@ -610,7 +611,7 @@ const Ventas = () => {
                     Ventas
                   </button>
                 </div>
-                <button className="flex gap-2 p-2 w-full hover:bg-gray-100 rounded-lg">
+                <button  onClick={() => navigate("/config")} className="flex gap-2 p-2 w-full hover:bg-gray-100 rounded-lg">
                   <User size={16} /> Configuración
                 </button>
                 <button 
@@ -947,7 +948,7 @@ const Ventas = () => {
       {/* Footer */}
       <footer className="w-full mt-auto bg-white border-t border-gray-200 flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
         <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          © 2024 Farmacia Médica Rincón. 
+          © 2026 Farmacia Médica Rincón. 
         </p>
         <div className="flex gap-8">
           <a

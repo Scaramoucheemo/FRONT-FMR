@@ -1,80 +1,170 @@
-import React from "react";
-import { IoMenu, IoNotifications, IoHome, IoPerson, IoReceipt, IoAdd } from "react-icons/io5";
-import { MdOutlineCalendarToday, MdAccessTime, MdWarning } from "react-icons/md";
+import React, { useState, useEffect, useRef } from "react";
+import { Bell, User, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { MdAccessTime, MdWarning } from "react-icons/md";
+import { IoAdd } from "react-icons/io5";
 
-const NOTIFICATION_DATA = [
-  {
-    id: "1",
-    type: "VENCIDO",
-    name: "Amoxicilina 500mg",
-    batch: "AMX-2023-09",
-    expiryDate: "15 OCT 2023",
-    stock: "24 Unidades",
-  },
-  {
-    id: "2",
-    type: "PROXIMO",
-    name: "Paracetamol Jarabe",
-    batch: "PRT-2024-12",
-    expiryDate: "20 DIC 2024",
-    stock: "120 Unidades",
-  },
-  {
-    id: "3",
-    type: "PROXIMO",
-    name: "Insulina Glargina",
-    batch: "INS-2024-05",
-    expiryDate: "15 ENE 2025",
-    stock: "8 Unidades",
-  },
-];
+const API_BASE = "http://161.35.234.161/api";
 
 const Alerts = () => {
-  return (
-    <div className="min-h-screen bg-slate-50 pb-28">
+  const navigate = useNavigate();
+  const menuRef = useRef(null);
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center bg-white px-5 py-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-pink-100 flex items-center justify-center">
-            💊
-          </div>
-          <h1 className="font-extrabold text-lg md:text-xl">Farmacia Médica Rincón</h1>
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+  const [user] = useState({
+    nombre: "Elena Rincón",
+    rol: "Farmacéutica",
+    email: "elena.rincon@farmacia.com"
+  });
+
+  // 🔥 Obtener productos del backend
+  const fetchAlerts = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/medicamentos`);
+      const data = await res.json();
+
+      const today = new Date();
+      const future = new Date();
+      future.setMonth(today.getMonth() + 3);
+
+      const filtered = data.map(p => {
+        const exp = new Date(p.fecha_vencimiento || p.fecha);
+
+        let type = null;
+        if (exp < today) type = "VENCIDO";
+        else if (exp <= future) type = "PROXIMO";
+
+        if (!type) return null;
+
+        return {
+          id: p.id,
+          type,
+          name: p.nombre,
+          batch: p.codigo,
+          expiryDate: exp.toLocaleDateString(),
+          stock: `${p.stock} unidades`,
+          raw: p
+        };
+      }).filter(Boolean);
+
+      setAlerts(filtered);
+    } catch (err) {
+      console.error("Error al cargar alertas:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  // 🗑 ELIMINAR
+  const handleDelete = async (item) => {
+    const confirmDelete = window.confirm(
+      `¿Eliminar ${item.name}?`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await fetch(`${API_BASE}/medicamentos/${item.id}`, {
+        method: "DELETE"
+      });
+      fetchAlerts();
+    } catch (err) {
+      console.error("Error eliminando:", err);
+    }
+  };
+
+  // ✏️ EDITAR
+  const handleEdit = (item) => {
+    navigate("/agregar", {
+      state: { product: item.raw, isEditing: true }
+    });
+  };
+
+  // 🚪 LOGOUT
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  // cerrar menú
+  useEffect(() => {
+    const close = e => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+
+      {/* NAVBAR */}
+      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
+        <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
+
+        <div className="hidden md:flex gap-6">
+          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f]">
+            Inventario
+          </span>
+          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f]">
+            Ventas
+          </span>
         </div>
-        <IoMenu size={26} />
-      </div>
+
+        <div className="flex items-center gap-4">
+          <Bell className="text-[#bc004f]" />
+
+          <div ref={menuRef} className="relative">
+            <div onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 cursor-pointer">
+              <img
+                src={`https://ui-avatars.com/api/?name=${user.nombre.replace(" ", "+")}`}
+                className="w-9 h-9 rounded-full"
+              />
+              <span className="hidden md:block">{user.nombre.split(" ")[0]}</span>
+            </div>
+
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
+                <button onClick={handleLogout} className="p-2 text-red-500 w-full text-left">
+                  <LogOut size={16}/> Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </nav>
 
       {/* CONTENIDO */}
-      <div className="px-5 py-6 max-w-5xl mx-auto">
+      <div className="pt-28 px-6 max-w-7xl mx-auto w-full flex-grow">
 
         <p className="text-xs font-bold text-slate-500 tracking-widest">
           CENTRO DE CONTROL
         </p>
-        <h2 className="text-2xl md:text-3xl font-black mb-6">
+
+        <h2 className="text-4xl font-black mb-6">
           NOTIFICACIONES
         </h2>
 
         {/* BANNER */}
-        <div className="bg-pink-100 rounded-3xl p-6 mb-6">
-          <h3 className="font-bold text-lg mb-2">
+        <div className="bg-pink-100 rounded-3xl p-6 mb-8">
+          <h3 className="font-bold text-lg">
             Medicamentos próximos a vencer
           </h3>
-          <p className="text-sm text-slate-600">
-            Gestione el inventario crítico para garantizar la seguridad del paciente.
-          </p>
         </div>
 
-        {/* TARJETAS */}
-        <div className="grid md:grid-cols-2 gap-5">
-          {NOTIFICATION_DATA.map((item) => {
+        {/* GRID */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {alerts.map(item => {
             const isExpired = item.type === "VENCIDO";
 
             return (
-              <div
-                key={item.id}
-                className="bg-white rounded-3xl p-5 shadow-sm"
-              >
-                <div className="flex justify-between items-start">
+              <div key={item.id} className="bg-white rounded-3xl p-5 shadow-sm">
+
+                <div className="flex justify-between">
                   <div>
                     <p className={`text-xs font-extrabold ${isExpired ? "text-red-500" : "text-pink-500"}`}>
                       {isExpired ? "PRODUCTO VENCIDO" : "PRÓXIMO A VENCER"}
@@ -86,11 +176,11 @@ const Alerts = () => {
                   </div>
 
                   <div className={`w-12 h-12 flex items-center justify-center rounded-xl ${isExpired ? "bg-red-100" : "bg-pink-100"}`}>
-                    {isExpired ? <MdWarning size={24} /> : <MdAccessTime size={24} />}
+                    {isExpired ? <MdWarning size={24}/> : <MdAccessTime size={24}/>}
                   </div>
                 </div>
 
-                <hr className="my-4" />
+                <hr className="my-4"/>
 
                 <div className="flex justify-between mb-4">
                   <div>
@@ -107,54 +197,54 @@ const Alerts = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-slate-100 rounded-xl py-2 font-bold">
+                  <button onClick={() => handleEdit(item)} className="flex-1 bg-slate-100 rounded-xl py-2 font-bold">
                     Editar
                   </button>
-                  <button className={`flex-1 rounded-xl py-2 font-bold ${isExpired ? "bg-red-500 text-white" : "bg-red-100 text-red-500"}`}>
+
+                  <button
+                    onClick={() => handleDelete(item)}
+                    className={`flex-1 rounded-xl py-2 font-bold ${isExpired ? "bg-red-500 text-white" : "bg-red-100 text-red-500"}`}
+                  >
                     Eliminar
                   </button>
                 </div>
+
               </div>
             );
           })}
         </div>
 
         {/* AGREGAR */}
-        <div className="border-2 border-dashed rounded-3xl p-8 text-center mt-6">
-          <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto shadow">
-            <IoAdd size={28} />
+        <div
+          onClick={() => navigate("/agregar")}
+          className="border-2 border-dashed rounded-3xl p-10 text-center mt-10 cursor-pointer hover:bg-gray-50"
+        >
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow">
+            <IoAdd size={30}/>
           </div>
           <p className="font-bold mt-3">Agregar Medicamento</p>
-          <p className="text-sm text-slate-500">
-            Escanee un nuevo lote
-          </p>
         </div>
+
       </div>
 
-      {/* BOTÓN FLOTANTE */}
-      <div className="fixed bottom-24 right-5 w-14 h-14 bg-pink-100 rounded-full flex items-center justify-center shadow-lg">
-        📷
-      </div>
+      {/* FOOTER */}
+      <footer className="w-full mt-auto bg-white border-t flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
+        <p className="text-[10px] uppercase tracking-widest text-gray-400">
+          © 2026 Farmacia Médica Rincón
+        </p>
 
-      {/* NAVBAR */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t flex justify-around py-3">
-        <div className="text-center text-slate-400 text-xs">
-          <IoHome size={22} className="mx-auto" />
-          HOME
+        <div className="flex gap-8">
+          <span className="text-[10px] text-gray-400 hover:text-[#bc004f] cursor-pointer">
+            Privacidad
+          </span>
+          <span className="text-[10px] text-gray-400 hover:text-[#bc004f] cursor-pointer">
+            Términos
+          </span>
+          <span className="text-[10px] text-gray-400 hover:text-[#bc004f] cursor-pointer">
+            Contacto
+          </span>
         </div>
-        <div className="text-center text-slate-400 text-xs">
-          <IoReceipt size={22} className="mx-auto" />
-          SALES
-        </div>
-        <div className="text-center text-black text-xs font-bold bg-pink-100 px-3 py-1 rounded-xl">
-          <IoNotifications size={22} className="mx-auto" />
-          ALERTS
-        </div>
-        <div className="text-center text-slate-400 text-xs">
-          <IoPerson size={22} className="mx-auto" />
-          PROFILE
-        </div>
-      </div>
+      </footer>
 
     </div>
   );
