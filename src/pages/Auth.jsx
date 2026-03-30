@@ -96,7 +96,7 @@ const Auth = () => {
           }`}
         >
           <img
-            src="https://images.unsplash.com/photo-1588776814546-ec7eec0b1c66"
+            src="https://cdn.shopify.com/s/files/1/0744/1969/files/anaqueles-para-farmacia-con-medicamentos_480x480.jpg?v=1759265750"
             className="w-full h-full object-cover"
             alt="Farmacia"
           />
