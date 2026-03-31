@@ -24,7 +24,7 @@ const Auth = () => {
     }));
   };
 
-  // 🔥 LOGIN
+  //  LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -50,7 +50,7 @@ const Auth = () => {
     }
   };
 
-  // 🔥 REGISTER
+  //  REGISTER
   const handleRegister = async (e) => {
     e.preventDefault();
 
