@@ -5,14 +5,15 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showVerifyPassword, setShowVerifyPassword] = useState(false);
 
+  // Variable de entorno de Vite para apuntar al backend (Local o Producción)
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
   const [formData, setFormData] = useState({
     nombre: "",
-    apellidos: "",
+    apellido: "", 
     email: "",
     password: "",
     confirmPassword: "",
-    fecha: "",
-    telefono: "",
     rol: ""
   });
 
@@ -29,7 +30,8 @@ const Auth = () => {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://161.35.234.161/auth/login", {
+      // Ajuste de ruta: Verifica si tu endpoint de login es /api/usuarios/login o /api/auth/login
+      const response = await fetch(`${apiUrl}/api/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -40,13 +42,15 @@ const Auth = () => {
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message);
+      if (!response.ok) throw new Error(data.message || "Error al iniciar sesión");
 
+      // Si el backend responde con un token, lo guardamos
       if (data.token) localStorage.setItem("token", data.token);
 
+      alert("¡Bienvenido!");
       window.location.href = "/home";
     } catch (error) {
-      alert(error.message);
+      alert(`Error: ${error.message}`);
     }
   };
 
@@ -59,37 +63,38 @@ const Auth = () => {
     }
 
     try {
-      const response = await fetch("http://161.35.234.161/auth/register", {
+      // Ajuste de ruta: Tu endpoint para crear usuarios es /api/usuarios
+      const response = await fetch(`${apiUrl}/api/usuarios`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre: formData.nombre,
-          apellidos: formData.apellidos,
+          apellido: formData.apellido,
           email: formData.email,
           password: formData.password,
-          telefono: formData.telefono,
-          fechaNacimiento: formData.fecha,
           rol: formData.rol
         })
       });
 
       const data = await response.json();
 
-      if (!response.ok) throw new Error(data.message);
+      if (!response.ok) throw new Error(data.message || "Error al registrar usuario");
 
-      alert("Registro exitoso");
+      alert("Registro exitoso. Ahora puedes iniciar sesión.");
+      // Limpiamos la contraseña y cambiamos a la vista de login
+      setFormData((prev) => ({ ...prev, password: "", confirmPassword: "" }));
       setIsLogin(true);
+      
     } catch (error) {
-      alert(error.message);
+      alert(`Error: ${error.message}`);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-pink-50 p-4">
-      {/* Contenedor principal */}
       <div className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[650px]">
         
-        {/* Panel de imagen - Solo visible en desktop */}
+        {/* Panel de imagen */}
         <div 
           className={`hidden lg:block absolute top-0 w-1/2 h-full transition-all duration-700 ease-in-out z-20 ${
             isLogin ? "right-0" : "left-0"
@@ -111,19 +116,16 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Contenedor de formularios - CORREGIDO */}
+        {/* Contenedor de formularios */}
         <div 
           className={`w-full lg:w-1/2 transition-all duration-700 ease-in-out ${
-            isLogin 
-              ? "lg:translate-x-0" 
-              : "lg:translate-x-0 lg:ml-auto"
+            isLogin ? "lg:translate-x-0" : "lg:translate-x-0 lg:ml-auto"
           }`}
         >
           
           {/* FORM LOGIN */}
-          {isLogin && (
+          {isLogin ? (
             <div className="p-6 sm:p-8 md:p-10">
-              {/* LOGO */}
               <div className="text-center mb-8">
                 <div className="w-20 h-20 bg-gradient-to-br from-pink-200 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <span className="material-symbols-outlined text-white text-3xl">
@@ -139,7 +141,6 @@ const Auth = () => {
               </div>
 
               <form onSubmit={handleLogin} className="space-y-4">
-                {/* EMAIL */}
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     mail
@@ -155,7 +156,6 @@ const Auth = () => {
                   />
                 </div>
 
-                {/* PASSWORD */}
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     lock
@@ -177,8 +177,7 @@ const Auth = () => {
                   </span>
                 </div>
 
-                {/* BOTÓN LOGIN */}
-                <button className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition flex items-center justify-center gap-2">
+                <button type="submit" className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition flex items-center justify-center gap-2 mt-6">
                   <span className="material-symbols-outlined text-xl">
                     login
                   </span>
@@ -196,10 +195,8 @@ const Auth = () => {
                 </span>
               </p>
             </div>
-          )}
-
-          {/* FORM REGISTER */}
-          {!isLogin && (
+          ) : (
+            /* FORM REGISTER */
             <div className="p-6 sm:p-8 md:p-10">
               <h1 className="text-2xl font-extrabold text-gray-800 mb-2">
                 Crear cuenta
@@ -209,7 +206,6 @@ const Auth = () => {
               </p>
 
               <form onSubmit={handleRegister} className="space-y-4">
-                {/* Nombre y Apellidos */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
@@ -230,8 +226,8 @@ const Auth = () => {
                       badge
                     </span>
                     <input
-                      name="apellidos"
-                      value={formData.apellidos}
+                      name="apellido"
+                      value={formData.apellido}
                       onChange={handleChange}
                       placeholder="Apellidos"
                       className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent outline-none transition"
@@ -240,7 +236,6 @@ const Auth = () => {
                   </div>
                 </div>
 
-                {/* Email */}
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     mail
@@ -256,7 +251,6 @@ const Auth = () => {
                   />
                 </div>
 
-                {/* Password y Confirmar */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="relative">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
@@ -301,41 +295,6 @@ const Auth = () => {
                   </div>
                 </div>
 
-                {/* Fecha y Teléfono */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
-                      calendar_today
-                    </span>
-                    <input
-                      type="date"
-                      name="fecha"
-                      value={formData.fecha}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent outline-none transition"
-                      required
-                    />
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-gray-600 text-xl">
-                        flag
-                      </span>
-                      <span className="font-medium">+52</span>
-                    </div>
-                    <input
-                      name="telefono"
-                      value={formData.telefono}
-                      onChange={handleChange}
-                      placeholder="Teléfono"
-                      className="flex-1 px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent outline-none transition"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Rol */}
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     medical_services
@@ -348,18 +307,15 @@ const Auth = () => {
                     required
                   >
                     <option value="">Seleccionar rol</option>
-                    <option value="medico">Médico</option>
-                    <option value="enfermeria">Enfermería</option>
-                    <option value="admin">Administrador</option>
-                    <option value="farmaceutico">Farmacéutico</option>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Vendedor">Vendedor</option>
                   </select>
                   <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                     expand_more
                   </span>
                 </div>
 
-                {/* BOTÓN REGISTRO */}
-                <button className="w-full py-4 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.02]">
+                <button type="submit" className="w-full py-4 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.02] mt-6">
                   <span className="material-symbols-outlined">
                     how_to_reg
                   </span>

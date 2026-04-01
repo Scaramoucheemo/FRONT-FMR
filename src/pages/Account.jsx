@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Bell, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = "http://161.35.234.161/api";
+const API_BASE = import.meta.env.VITE_API_URL;;
 
 const Account = () => {
   const navigate = useNavigate();

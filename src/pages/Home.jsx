@@ -14,7 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 
-const API_BASE = "http://161.35.234.161/api";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const Home = () => {
   const navigate = useNavigate();

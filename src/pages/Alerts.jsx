@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MdAccessTime, MdWarning } from "react-icons/md";
 import { IoAdd } from "react-icons/io5";
 
-const API_BASE = "http://161.35.234.161/api";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const Alerts = () => {
   const navigate = useNavigate();

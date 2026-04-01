@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_BASE = "http://161.35.234.161/api";
+const API_BASE = import.meta.env.VITE_API_URL;;
 
 export const api = {
   // Productos

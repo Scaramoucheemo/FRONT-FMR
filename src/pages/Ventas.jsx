@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell, User, LogOut, Search, X, Plus, Minus, Scan } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 
-const API_BASE = "http://161.35.234.161/api";
+const API_BASE = import.meta.env.VITE_API_URL;
 
 const Ventas = () => {
   const navigate = useNavigate();
@@ -558,7 +558,7 @@ const Ventas = () => {
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1  onClick={() => navigate("/home")}
-          className="font-bold text-lg cursor-pointer"className="font-bold text-lg">Farmacia Médica Rincón</h1>
+          className="font-bold text-lg cursor-pointer">Farmacia Médica Rincón</h1>
 
         <div className="hidden md:flex gap-6">
           <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f] transition-colors">

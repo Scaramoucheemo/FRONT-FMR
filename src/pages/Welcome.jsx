@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pill } from "lucide-react";
-import logo from "../assets/logo.jpeg"; // 🔥 IMPORTANTE
+import logo from "../assets/logo.jpeg"; 
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center overflow-hidden">
 
-      {/* 🔥 SPLASH / LOADING */}
+      {/* SPLASH / LOADING */}
       {loading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 z-50 animate-fadeOut">
 
@@ -33,11 +33,9 @@ const Welcome = () => {
         </div>
       )}
 
-      {/* 🔽 CONTENIDO FINAL */}
       {!loading && (
         <div className="text-center w-full max-w-sm px-6 animate-fadeIn">
 
-          {/* 🔥 AQUÍ VA EL LOGO (LO QUE QUERÍAS) */}
           <div className="mb-8 flex justify-center">
             <img
               src={logo}
