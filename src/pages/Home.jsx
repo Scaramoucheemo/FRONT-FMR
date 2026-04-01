@@ -9,7 +9,12 @@ import {
   Trash2,
   User,
   LogOut,
-  X
+  X,
+  Package,
+  Truck,
+  Boxes,
+  Users,
+  Stethoscope
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BrowserMultiFormatReader } from "@zxing/browser";
@@ -33,6 +38,20 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [notification, setNotification] = useState(null);
+
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const fabRef = useRef(null);
+
+  useEffect(() => {
+  const close = e => {
+    if (fabRef.current && !fabRef.current.contains(e.target)) {
+      setIsFabOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", close);
+  return () => document.removeEventListener("mousedown", close);
+  }, []);
+  
 
   //  FETCH PRODUCTOS
   const fetchProducts = async () => {
@@ -655,19 +674,80 @@ const Home = () => {
         </div>
       </footer>
 
+      
+
       {/* FAB */}
-      <div className="fixed bottom-6 right-6 flex flex-col items-end gap-3">
-        <span className="hidden md:block bg-black text-white text-xs px-3 py-1 rounded-full shadow">
-          Nuevo Producto
-        </span>
-        
-        <button
-          onClick={() => navigate("/agregar")}
-          className="bg-[#bc004f] w-16 h-16 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-110 transition-all duration-300"
-        >
-          <Plus size={24} />
-        </button>
-      </div>
+      <div ref={fabRef} className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50">
+
+  {/* OPCIONES */}
+ {/* FAB */}
+<div ref={fabRef} className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50">
+
+  {/* OPCIONES */}
+  <div className={`flex flex-col items-end gap-2 transition-all duration-300 ${
+    isFabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+  }`}>
+
+    <button
+      onClick={() => { navigate("/agregar", { state: { tipo: "producto" } }); setIsFabOpen(false); }}
+      className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100"
+    >
+      <Package size={16} /> Producto
+    </button>
+
+    <button
+      onClick={() => { navigate("/agregar", { state: { tipo: "proveedor" } }); setIsFabOpen(false); }}
+      className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100"
+    >
+      <Truck size={16} /> Proveedor
+    </button>
+
+    <button
+      onClick={() => { navigate("/agregar", { state: { tipo: "lote" } }); setIsFabOpen(false); }}
+      className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100"
+    >
+      <Boxes size={16} /> Lote
+    </button>
+
+    <button
+      onClick={() => { navigate("/agregar", { state: { tipo: "cliente" } }); setIsFabOpen(false); }}
+      className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100"
+    >
+      <Users size={16} /> Cliente
+    </button>
+
+    <button
+      onClick={() => { navigate("/agregar", { state: { tipo: "doctor" } }); setIsFabOpen(false); }}
+      className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100"
+    >
+      <Stethoscope size={16} /> Doctor
+    </button>
+
+  </div>
+
+  {/* BOTÓN */}
+  <button
+    onClick={() => setIsFabOpen(!isFabOpen)}
+    className={`bg-[#bc004f] w-16 h-16 rounded-full flex items-center justify-center text-white shadow-xl transition-all ${
+      isFabOpen ? "rotate-45 scale-110" : "hover:scale-110"
+    }`}
+  >
+    <Plus size={24} />
+  </button>
+
+</div>
+
+  {/* BOTÓN PRINCIPAL */}
+  <button
+    onClick={() => setIsFabOpen(!isFabOpen)}
+    className={`bg-[#bc004f] w-16 h-16 rounded-full flex items-center justify-center text-white shadow-xl transition-all duration-300 ${
+      isFabOpen ? "rotate-45 scale-110" : "hover:scale-110"
+    }`}
+  >
+    <Plus size={24} />
+  </button>
+
+</div>
 
     </div>
   );
