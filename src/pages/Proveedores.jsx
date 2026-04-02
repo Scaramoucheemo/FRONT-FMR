@@ -151,6 +151,7 @@ const Proveedores = () => {
       fetchProveedores();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
+      console.log(err)
       setError("Error al eliminar proveedor");
       setTimeout(() => setError(null), 3000);
     }
@@ -177,6 +178,7 @@ const Proveedores = () => {
       fetchProveedores();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
+      console.log(err)
       setError("Error al reactivar proveedor");
       setTimeout(() => setError(null), 3000);
     }
@@ -200,6 +202,7 @@ const Proveedores = () => {
       fetchProveedores();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
+      console.log(err)
       setError("Error al eliminar proveedor permanentemente");
       setTimeout(() => setError(null), 3000);
     }

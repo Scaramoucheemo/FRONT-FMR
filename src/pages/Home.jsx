@@ -536,7 +536,7 @@ const Home = () => {
             </button>
             <button onClick={() => { navigate("/Proveedores"); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100"> <Truck size={16} /> Proveedor
             </button>
-            <button onClick={() => { navigate("/agregar", { state: { tipo: "lote" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
+            <button onClick={() => { navigate("/Lotes", { state: { tipo: "lote" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
               <Boxes size={16} /> Lote
             </button>
             <button onClick={() => { navigate("/agregar", { state: { tipo: "cliente" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
