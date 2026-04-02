@@ -71,6 +71,38 @@ export const api = {
     return response.json();
   },
 
+  // Doctores
+  async getDoctores() {
+    const response = await fetch(`${API_BASE}/doctores`);
+    if (!response.ok) throw new Error('Error al cargar doctores');
+    return response.json();
+  },
+
+  async getDoctorById(id) {
+    const response = await fetch(`${API_BASE}/doctores/${id}`);
+    if (!response.ok) throw new Error('Doctor no encontrado');
+    return response.json();
+  },
+
+  async crearDoctor(doctorData) {
+    const response = await fetch(`${API_BASE}/doctores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(doctorData)
+    });
+    if (!response.ok) throw new Error('Error al crear doctor');
+    return response.json();
+  },
+
+  async actualizarDoctor(id, doctorData) {
+    const response = await fetch(`${API_BASE}/doctores/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(doctorData)
+    });
+    if (!response.ok) throw new Error('Error al actualizar doctor');
+    return response.json();
+  },
   // Usuario actual
   async getUsuarioActual() {
     const token = localStorage.getItem('token');

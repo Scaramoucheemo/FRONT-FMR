@@ -278,7 +278,7 @@ const Agregar = () => {
           </span>
 
           <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
-            {isEditing ? "Editar Producto" : "Agregar Producto"}
+            {isEditing ? "Editar Producto" : "Agregar Productos"}
           </span>
         </div>
 

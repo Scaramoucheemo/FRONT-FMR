@@ -539,10 +539,10 @@ const Home = () => {
             <button onClick={() => { navigate("/agregar", { state: { tipo: "lote" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
               <Boxes size={16} /> Lote
             </button>
-            <button onClick={() => { navigate("/agregar", { state: { tipo: "cliente" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
+            <button onClick={() => { navigate("/Clientes", { state: { tipo: "cliente" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
               <Users size={16} /> Cliente
             </button>
-            <button onClick={() => { navigate("/agregar", { state: { tipo: "doctor" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
+            <button onClick={() => { navigate("/Doctores", { state: { tipo: "doctor" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
               <Stethoscope size={16} /> Doctor
             </button>
 
