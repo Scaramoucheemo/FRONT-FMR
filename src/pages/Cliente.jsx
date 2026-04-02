@@ -95,7 +95,7 @@ const Cliente = () => {
       }
 
       setSuccess(isEditing ? "Cliente actualizado correctamente" : "Cliente guardado correctamente");
-      setTimeout(() => navigate("/clientes"), 1500);
+      setTimeout(() => navigate("/home"), 1500);
 
     } catch (err) {
       console.error("Error al guardar:", err);
@@ -107,7 +107,7 @@ const Cliente = () => {
 
   const handleCancel = () => {
     if (window.confirm("¿Está seguro de cancelar? Los cambios no guardados se perderán.")) {
-      navigate("/clientes");
+      navigate("/home");
     }
   };
 

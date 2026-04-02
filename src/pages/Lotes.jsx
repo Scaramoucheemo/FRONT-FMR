@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Bell, LogOut, Save, Package, Truck, Calendar, Hash, 
-  ClipboardList, AlertCircle, Pencil, Trash2, Archive, 
-  AlertTriangle, PlusCircle, ChevronDown 
+import {
+  Bell, LogOut, Save, Package, Truck, Calendar, Hash,
+  ClipboardList, AlertCircle, Pencil, Trash2, Archive,
+  AlertTriangle, PlusCircle, ChevronDown
 } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -12,7 +12,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const CustomDropdown = ({ value, options, onChange, onAddNew, placeholder, addNewText, icon: Icon }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-  
+
   const selectedOption = options.find(o => o.id === value);
 
   useEffect(() => {
@@ -25,12 +25,11 @@ const CustomDropdown = ({ value, options, onChange, onAddNew, placeholder, addNe
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <button 
-        type="button" 
-        onClick={() => setIsOpen(!isOpen)} 
-        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-2 text-left flex justify-between items-center outline-none focus:outline-none focus:ring-0 transition-all duration-300 ${
-          isOpen ? "border-[#FA8072] bg-white" : "border-transparent hover:border-[#FA8072]/50"
-        }`}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-2 text-left flex justify-between items-center outline-none focus:outline-none focus:ring-0 transition-all duration-300 ${isOpen ? "border-[#FA8072] bg-white" : "border-transparent hover:border-[#FA8072]/50"
+          }`}
       >
         <div className="flex items-center gap-2 truncate">
           <Icon className="absolute left-3 text-gray-400" size={18} />
@@ -41,14 +40,13 @@ const CustomDropdown = ({ value, options, onChange, onAddNew, placeholder, addNe
         <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
-      <div className={`absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 transform origin-top ${
-        isOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-95 pointer-events-none"
-      }`}>
+      <div className={`absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden transition-all duration-200 transform origin-top ${isOpen ? "opacity-100 scale-y-100" : "opacity-0 scale-y-95 pointer-events-none"
+        }`}>
         <div className="max-h-60 overflow-y-auto p-2 custom-scrollbar">
           {options.map((opt) => (
-            <div 
-              key={opt.id} 
-              onClick={() => { onChange(opt.id); setIsOpen(false); }} 
+            <div
+              key={opt.id}
+              onClick={() => { onChange(opt.id); setIsOpen(false); }}
               className="group flex flex-col p-3 rounded-xl hover:bg-[#FA8072]/10 cursor-pointer transition-colors"
             >
               <span className="font-bold text-gray-800 group-hover:text-[#FA8072]">{opt.label}</span>
@@ -57,11 +55,11 @@ const CustomDropdown = ({ value, options, onChange, onAddNew, placeholder, addNe
           ))}
           {options.length === 0 && <p className="text-sm text-gray-400 p-3 text-center">No hay opciones disponibles</p>}
         </div>
-        
+
         <div className="border-t border-gray-100 bg-gray-50 p-2">
-          <button 
-            type="button" 
-            onClick={() => { onAddNew(); setIsOpen(false); }} 
+          <button
+            type="button"
+            onClick={() => { onAddNew(); setIsOpen(false); }}
             className="flex items-center justify-center gap-2 w-full p-3 text-[#bc004f] hover:bg-[#bc004f]/10 rounded-xl font-bold transition-colors"
           >
             <PlusCircle size={18} /> {addNewText}
@@ -86,7 +84,7 @@ const Lotes = () => {
   const [lotes, setLotes] = useState([]);
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
-  
+
   // AHORA ESTA VARIABLE CONTROLA SI VEMOS ACTIVOS O AGOTADOS (CANTIDAD 0)
   const [verAgotados, setVerAgotados] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -101,7 +99,7 @@ const Lotes = () => {
     factura: "",
     observaciones: ""
   };
-  
+
   const [form, setForm] = useState(estadoInicial);
 
   useEffect(() => {
@@ -129,14 +127,14 @@ const Lotes = () => {
       const headers = { "Authorization": `Bearer ${token}` };
 
       // Cambiamos a la query "agotados"
-      const endpointLotes = verAgotados 
-        ? `${API_BASE}/api/lotes?agotados=true` 
+      const endpointLotes = verAgotados
+        ? `${API_BASE}/api/lotes?agotados=true`
         : `${API_BASE}/api/lotes`;
 
       const [resLotes, resProductos, resProveedores] = await Promise.all([
         fetch(endpointLotes, { headers }),
-        fetch(`${API_BASE}/api/productos`, { headers }), 
-        fetch(`${API_BASE}/api/proveedores`, { headers }) 
+        fetch(`${API_BASE}/api/productos`, { headers }),
+        fetch(`${API_BASE}/api/proveedores`, { headers })
       ]);
 
       if (resLotes.ok) setLotes(await resLotes.json());
@@ -169,25 +167,25 @@ const Lotes = () => {
     e.preventDefault();
     if (!validateForm()) return;
     setLoading(true); setError(null);
-    
+
     try {
       const token = localStorage.getItem("token");
       const url = isEditing ? `${API_BASE}/api/lotes/${editingId}` : `${API_BASE}/api/lotes`;
-      
+
       const res = await fetch(url, {
         method: isEditing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ ...form, cantidad: parseInt(form.cantidad) })
       });
-      
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || data.message || "Error al registrar el lote");
-      
+
       setSuccess(isEditing ? "Lote actualizado" : "Lote ingresado al inventario con éxito");
       setForm(estadoInicial);
       setIsEditing(false); setEditingId(null);
-      
-      fetchDatos(); 
+
+      fetchDatos();
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.message); setTimeout(() => setError(null), 4000);
@@ -196,7 +194,7 @@ const Lotes = () => {
     }
   };
 
-const handleEdit = (lote) => {
+  const handleEdit = (lote) => {
     setForm({
       id_producto: lote.id_producto || "",
       id_proveedor: lote.id_proveedor || "",
@@ -206,10 +204,10 @@ const handleEdit = (lote) => {
       factura: lote.factura || "",
       observaciones: lote.observaciones || ""
     });
-    
+
     // BLINDAJE: Atrapamos la PK no importa cómo la haya mapeado Sequelize
     const idReal = lote.id_registro_lote || lote.id_lote || lote.id;
-    setEditingId(idReal); 
+    setEditingId(idReal);
     setIsEditing(true);
   };
 
@@ -223,12 +221,12 @@ const handleEdit = (lote) => {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Error al eliminar");
-      
-      setSuccess("Registro de lote destruido exitosamente"); 
-      fetchDatos(); 
+
+      setSuccess("Registro de lote destruido exitosamente");
+      fetchDatos();
       setTimeout(() => setSuccess(null), 3000);
-    } catch (err) { 
-      setError(err.message); setTimeout(() => setError(null), 5000); 
+    } catch (err) {
+      setError(err.message); setTimeout(() => setError(null), 5000);
     }
   };
 
@@ -266,27 +264,91 @@ const handleEdit = (lote) => {
 
   return (
     <div className="min-h-screen bg-[#fffbff] flex flex-col">
+    
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
+
+        {/* Opciones en pantallas medianas en adelante */}
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Inventario</span>
-          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Ventas</span>
-          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">Registro de Lotes</span>
+          <span
+            onClick={() => navigate("/home")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Inventario
+          </span>
+
+          <span
+            onClick={() => navigate("/ventas")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Ventas
+          </span>
+          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
+            Registro de Lotes
+          </span>
         </div>
+
         <div className="flex items-center gap-4">
-          <Bell className="cursor-pointer hover:text-[#bc004f] transition-colors" />
-          <div className="relative" ref={menuRef}>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <img src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(' ', '+') || 'User'}&background=bc004f&color=fff`} className="w-9 h-9 rounded-full object-cover" alt="Avatar"/>
+          <Bell
+            onClick={() => navigate("/alerts")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          />
+
+          <div ref={menuRef} className="relative">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <img
+                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(" ", "+") || "User"}&background=bc004f&color=fff`}
+                className="w-9 h-9 rounded-full object-cover"
+                alt="Avatar"
+              />
+              <span className="hidden md:block text-sm font-medium text-gray-700">
+                {currentUser?.nombre?.split(" ")[0] || "Usuario"}
+              </span>
             </div>
+
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
+                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
-                  <p className="font-semibold text-gray-800">{currentUser?.nombre}</p>
-                  <p className="text-xs text-gray-500">{currentUser?.rol}</p>
+                  <p className="font-semibold text-gray-800">
+                    {currentUser?.nombre || "Usuario"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {currentUser?.rol || "Rol no definido"}
+                  </p>
                 </div>
-                <button onClick={handleLogout} className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg">
+
+                {/* Opciones SOLO en móvil */}
+                <div className="flex flex-col md:hidden border-b mb-2 pb-2">
+                  <button
+                    onClick={() => {
+                      navigate("/home");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Inventario
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("/ventas");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Ventas
+                  </button>
+                </div>
+
+                {/* Cerrar sesión */}
+                <button
+                  onClick={handleLogout}
+                  className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
+                >
                   <LogOut size={16} /> Cerrar sesión
                 </button>
               </div>
@@ -296,7 +358,7 @@ const handleEdit = (lote) => {
       </nav>
 
       {/* NOTIFICACIONES */}
-      {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg flex items-center gap-2"><AlertCircle size={18}/>{error}</div>}
+      {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg flex items-center gap-2"><AlertCircle size={18} />{error}</div>}
       {success && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-100 text-green-700 p-3 rounded-lg shadow-lg">{success}</div>}
 
       {/* MAIN */}
@@ -311,18 +373,18 @@ const handleEdit = (lote) => {
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 h-full">
-          
+
           {/* FORMULARIO */}
           <section className="lg:col-span-5 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Datos de la Mercancía
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              
+
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Producto Vinculado *</label>
-                <CustomDropdown 
+                <CustomDropdown
                   icon={Package}
                   value={form.id_producto}
                   options={opcionesProductos}
@@ -335,7 +397,7 @@ const handleEdit = (lote) => {
 
               <div>
                 <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Proveedor *</label>
-                <CustomDropdown 
+                <CustomDropdown
                   icon={Truck}
                   value={form.id_proveedor}
                   options={opcionesProveedores}
@@ -401,22 +463,21 @@ const handleEdit = (lote) => {
           <aside className="lg:col-span-7 flex flex-col h-[750px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
-                <ClipboardList className="text-[#bc004f]" size={20} /> 
+                <ClipboardList className="text-[#bc004f]" size={20} />
                 {verAgotados ? "Historial de Lotes Agotados" : "Lotes Activos en Inventario"}
               </h2>
-              <button 
+              <button
                 onClick={() => setVerAgotados(!verAgotados)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors outline-none focus:outline-none ${
-                  verAgotados ? 'bg-gray-800 text-white' : 'bg-[#FA8072]/10 text-[#FA8072] hover:bg-[#FA8072]/20'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors outline-none focus:outline-none ${verAgotados ? 'bg-gray-800 text-white' : 'bg-[#FA8072]/10 text-[#FA8072] hover:bg-[#FA8072]/20'
+                  }`}
               >
                 <Archive size={14} />
                 {verAgotados ? 'Ver Inventario Activo' : 'Ver Agotados'}
               </button>
             </div>
-            
+
             <div className="flex-grow overflow-y-auto pr-2 space-y-4 custom-scrollbar pb-10">
-              
+
               {lotes.length === 0 && !loading && (
                 <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
                   <p className="text-gray-500">
@@ -426,24 +487,24 @@ const handleEdit = (lote) => {
               )}
 
               {lotes.map(lote => {
-                const imgSource = lote.Producto?.imagen 
-                  ? `${API_BASE}/uploads/${lote.Producto.imagen}` 
+                const imgSource = lote.Producto?.imagen
+                  ? `${API_BASE}/uploads/${lote.Producto.imagen}`
                   : "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae";
-                
+
                 const estado = getEstadoCaducidad(lote.fecha_caducidad);
 
                 return (
                   <div key={lote.id_registro_lote || lote.id} className={`group relative p-4 rounded-2xl shadow-sm border flex items-center gap-5 transition-all overflow-hidden ${verAgotados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200 hover:shadow-md hover:border-[#FA8072]/30'}`}>
-                    
+
                     {/* ACCIONES HOVER */}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-opacity duration-300 z-10 backdrop-blur-sm">
                       <button onClick={() => handleEdit(lote)} className="bg-white p-3 rounded-full hover:bg-[#FA8072] hover:text-white transition-colors outline-none focus:outline-none" title="Editar / Corregir Cantidad">
-                        <Pencil size={18}/>
+                        <Pencil size={18} />
                       </button>
-                      
+
                       {verAgotados && (
                         <button onClick={() => handleHardDelete(lote.id_registro_lote || lote.id)} className="bg-white p-3 rounded-full hover:bg-red-600 hover:text-white transition-colors outline-none focus:outline-none" title="Eliminar del historial permanentemente">
-                          <Trash2 size={18}/>
+                          <Trash2 size={18} />
                         </button>
                       )}
                     </div>
@@ -463,13 +524,13 @@ const handleEdit = (lote) => {
                           <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${estado.color}`}>{estado.texto}</span>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
                         <p className="text-sm text-gray-600 flex items-center gap-1">
                           <Hash size={14} className="text-gray-400" /> <span className="font-semibold">Lote:</span> {lote.codigo_lote_fisico}
                         </p>
                         <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <Package size={14} className={verAgotados ? "text-gray-400" : "text-[#FA8072]"} /> 
+                          <Package size={14} className={verAgotados ? "text-gray-400" : "text-[#FA8072]"} />
                           <span className={`font-semibold ${verAgotados ? "text-gray-400" : "text-gray-800"}`}>
                             {lote.cantidad} uds
                           </span>
@@ -487,7 +548,7 @@ const handleEdit = (lote) => {
               })}
             </div>
           </aside>
-          
+
         </div>
       </main>
     </div>
