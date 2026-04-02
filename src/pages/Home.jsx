@@ -61,15 +61,15 @@ const Home = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      
-      const endpoint = verDescontinuados 
-        ? `${API_BASE}/api/productos?inactivos=true` 
+
+      const endpoint = verDescontinuados
+        ? `${API_BASE}/api/productos?inactivos=true`
         : `${API_BASE}/api/productos`;
 
       const res = await fetch(endpoint, {
         headers: { "Authorization": `Bearer ${token}` }
       });
-      
+
       if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
       const data = await res.json();
 
@@ -79,7 +79,7 @@ const Home = () => {
         code: p.codigo_barras,
         description: p.presentacion || p.sustancia_activa || "Sin descripción",
         price: p.precio_venta,
-        stock: "N/A", 
+        stock: "N/A",
         image: p.imagen ? `${API_BASE}/uploads/${p.imagen}` : "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae"
       })) : [];
 
@@ -103,7 +103,7 @@ const Home = () => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
-    }else {
+    } else {
       // Si no hay usuario guardado, lo mandamos al login por seguridad
       navigate("/login");
     }
@@ -111,7 +111,7 @@ const Home = () => {
   }, []);
   // SCANNER INIT & STOP (Mismos que ya tenías)
   useEffect(() => {
-    try { codeReader.current = new BrowserMultiFormatReader(); } catch (e) {console.error(e);}
+    try { codeReader.current = new BrowserMultiFormatReader(); } catch (e) { console.error(e); }
     return () => stopScanner();
   }, []);
 
@@ -125,14 +125,14 @@ const Home = () => {
         setTimeout(() => setNotification(null), 3000);
         return;
       }
-      
+
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/productos/scan`, {
         method: 'POST',
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ codigo_barras: code })
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setNotification(`Producto encontrado: ${data.nombre_comercial}`);
@@ -166,7 +166,7 @@ const Home = () => {
             if (result && !yaEscaneado) {
               yaEscaneado = true; // 🔒 Cerramos el candado
               const code = result.getText();
-              
+
               setSearchTerm(code);
               stopScanner();
               lookupByCode(code); // ¡Ahora sí, solo hará 1 sola petición al servidor!
@@ -183,13 +183,13 @@ const Home = () => {
 
   const stopScanner = () => {
     if (codeReader.current && typeof codeReader.current.reset === 'function') {
-      try { codeReader.current.reset(); } catch (e) {console.error(e);}
+      try { codeReader.current.reset(); } catch (e) { console.error(e); }
     }
     if (videoRef.current && videoRef.current.srcObject) {
-      try { 
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop()); 
+      try {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         videoRef.current.srcObject = null;
-      } catch(e){console.error(e);}
+      } catch (e) { console.error(e); }
     }
     setIsScannerOpen(false);
   };
@@ -198,7 +198,7 @@ const Home = () => {
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm("¿Seguro que deseas desactivar este producto?");
     if (!confirmDelete) return;
-    
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
@@ -206,11 +206,11 @@ const Home = () => {
         method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
-      
+
       if (response.ok) {
         setSuccess("Producto desactivado correctamente");
         setTimeout(() => setSuccess(null), 3000);
-        fetchProducts(); 
+        fetchProducts();
       } else {
         throw new Error("Error al eliminar");
       }
@@ -227,24 +227,24 @@ const Home = () => {
   const handleReactivate = async (id) => {
     const confirmRevive = window.confirm("¿Reactivar este producto para que vuelva al inventario?");
     if (!confirmRevive) return;
-    
+
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
       // Asume que tu endpoint PATCH permite modificar el estado
       const response = await fetch(`${API_BASE}/api/productos/${id}`, {
         method: "PATCH",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ estado: true })
       });
-      
+
       if (response.ok) {
         setSuccess("Producto reactivado con éxito");
         setTimeout(() => setSuccess(null), 3000);
-        fetchProducts(); 
+        fetchProducts();
       } else {
         throw new Error("Error al reactivar");
       }
@@ -261,9 +261,9 @@ const Home = () => {
     fetch(`${API_BASE}/api/productos/${product.id}`, {
       headers: { "Authorization": `Bearer ${localStorage.getItem('token')}` }
     })
-    .then(res => res.json())
-    .then(data => navigate("/agregar", { state: { product: data, isEditing: true } }))
-    .catch(() => navigate("/agregar", { state: { product, isEditing: true } }));
+      .then(res => res.json())
+      .then(data => navigate("/agregar", { state: { product: data, isEditing: true } }))
+      .catch(() => navigate("/agregar", { state: { product, isEditing: true } }));
   };
 
   const handleSearch = () => {
@@ -297,24 +297,88 @@ const Home = () => {
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
+
+        {/* Opciones en pantallas medianas en adelante */}
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/home")} className="text-[#bc004f] font-bold cursor-pointer border-b-2 border-[#bc004f]">Inventario</span>
-          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Ventas</span>
+          <span
+            onClick={() => navigate("/home")}
+            className="text-[#bc004f] font-bold cursor-pointer border-b-2 border-[#bc004f]"
+          >
+            Inventario
+          </span>
+          <span
+            onClick={() => navigate("/ventas")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Ventas
+          </span>
         </div>
+
         <div className="flex items-center gap-4">
-          <Bell onClick={() => navigate("/alerts")} className="cursor-pointer hover:text-[#bc004f] transition-colors" />
+          <Bell
+            onClick={() => navigate("/alerts")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          />
+
           <div ref={menuRef} className="relative">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <img src={`https://ui-avatars.com/api/?name=${user?.nombre?.replace(' ', '+') || 'User'}&background=bc004f&color=fff`} className="w-9 h-9 rounded-full object-cover" alt="Avatar"/>
-              <span className="hidden md:block text-sm font-medium text-gray-700">{user?.nombre?.split(' ')[0] || 'Usuario'}</span>
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <img
+                src={`https://ui-avatars.com/api/?name=${user?.nombre?.replace(
+                  " ",
+                  "+"
+                ) || "User"}&background=bc004f&color=fff`}
+                className="w-9 h-9 rounded-full object-cover"
+                alt="Avatar"
+              />
+              <span className="hidden md:block text-sm font-medium text-gray-700">
+                {user?.nombre?.split(" ")[0] || "Usuario"}
+              </span>
             </div>
+
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
+
+                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
-                  <p className="font-semibold text-gray-800">{user?.nombre || "Usuario"}</p>
-                  <p className="text-xs text-gray-500">{user?.rol || 'Rol no definido'}</p>
+                  <p className="font-semibold text-gray-800">
+                    {user?.nombre || "Usuario"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user?.rol || "Rol no definido"}
+                  </p>
                 </div>
-                <button onClick={handleLogout} className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg">
+
+                {/* 🔽 Opciones SOLO en móvil */}
+                <div className="flex flex-col md:hidden border-b mb-2 pb-2">
+                  <button
+                    onClick={() => {
+                      navigate("/home");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Inventario
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      navigate("/ventas");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Ventas
+                  </button>
+                </div>
+
+                {/* Cerrar sesión */}
+                <button
+                  onClick={handleLogout}
+                  className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
+                >
                   <LogOut size={16} /> Cerrar sesión
                 </button>
               </div>
@@ -351,11 +415,10 @@ const Home = () => {
 
           <div className="flex gap-3 flex-wrap">
             {/* BOTÓN PARA ALTERNAR VISTA */}
-            <button 
+            <button
               onClick={() => setVerDescontinuados(!verDescontinuados)}
-              className={`px-4 py-3 rounded-xl flex items-center gap-2 transition-colors font-bold ${
-                verDescontinuados ? 'bg-gray-800 text-white' : 'bg-pink-100 text-[#bc004f] hover:bg-pink-200'
-              }`}
+              className={`px-4 py-3 rounded-xl flex items-center gap-2 transition-colors font-bold ${verDescontinuados ? 'bg-gray-800 text-white' : 'bg-pink-100 text-[#bc004f] hover:bg-pink-200'
+                }`}
             >
               <Archive size={20} />
               {verDescontinuados ? 'Ver Activos' : 'Ver Descontinuados'}
@@ -399,7 +462,7 @@ const Home = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map(p => (
               <div key={p.id} className={`group bg-white rounded-3xl shadow-sm overflow-hidden relative border transition-all hover:shadow-lg ${verDescontinuados ? 'border-gray-400 opacity-80' : 'border-gray-200'}`}>
-                
+
                 <div className="w-full h-52 bg-gray-50 flex items-center justify-center p-4 relative">
                   <img src={p.image} className={`max-w-full max-h-full object-contain mix-blend-multiply ${verDescontinuados ? 'grayscale' : ''}`} alt={p.name} />
                   {verDescontinuados && (
@@ -408,31 +471,31 @@ const Home = () => {
                     </div>
                   )}
                 </div>
-                
-<div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-all duration-300">
-                  
+
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-all duration-300">
+
                   {/* ¡SEGURIDAD VISUAL! Solo el Admin ve estos botones */}
                   {user?.rol === 'Administrador' && (
                     <>
                       <button onClick={() => handleEdit(p)} className="bg-white p-3 rounded-full hover:bg-[#bc004f] hover:text-white transition-colors" title="Editar producto">
-                        <Pencil size={18}/>
+                        <Pencil size={18} />
                       </button>
-                      
+
                       {verDescontinuados ? (
-                         <button onClick={() => handleReactivate(p.id)} className="bg-white p-3 rounded-full hover:bg-green-500 hover:text-white transition-colors" title="Reactivar producto">
-                           <RefreshCw size={18}/>
-                         </button>
+                        <button onClick={() => handleReactivate(p.id)} className="bg-white p-3 rounded-full hover:bg-green-500 hover:text-white transition-colors" title="Reactivar producto">
+                          <RefreshCw size={18} />
+                        </button>
                       ) : (
-                         <button onClick={() => handleDelete(p.id)} className="bg-white p-3 rounded-full hover:bg-red-500 hover:text-white transition-colors" title="Descontinuar producto">
-                           <Trash2 size={18}/>
-                         </button>
+                        <button onClick={() => handleDelete(p.id)} className="bg-white p-3 rounded-full hover:bg-red-500 hover:text-white transition-colors" title="Descontinuar producto">
+                          <Trash2 size={18} />
+                        </button>
                       )}
                     </>
                   )}
-                  
+
                   {/* Opcional: Si es Vendedor, puedes mostrarle un ojito para ver detalles en vez de editar */}
                   {user?.rol !== 'Administrador' && (
-                     <span className="text-white font-bold tracking-widest text-sm">SOLO LECTURA</span>
+                    <span className="text-white font-bold tracking-widest text-sm">SOLO LECTURA</span>
                   )}
 
                 </div>
@@ -440,17 +503,17 @@ const Home = () => {
                   <h3 className="font-bold text-lg">{p.name}</h3>
                   <p className="text-sm text-gray-500 mt-1">{p.description}</p>
                   <p className="text-xs text-gray-400 mt-1">Código: {p.code}</p>
-                  
+
                   <div className="flex justify-between items-center mt-4">
                     <span className="text-[#bc004f] font-bold text-2xl">${p.price}</span>
                   </div>
                 </div>
-                
+
               </div>
             ))}
           </div>
         )}
-        
+
         {filteredProducts.length === 0 && !loading && (
           <div className="text-center py-20">
             <p className="text-gray-500 text-lg">No se encontraron productos {verDescontinuados ? 'inactivos' : 'en el catálogo'}</p>
@@ -467,7 +530,7 @@ const Home = () => {
       {user?.rol === 'Administrador' && (
         <div ref={fabRef} className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50">
           <div className={`flex flex-col items-end gap-2 transition-all duration-300 ${isFabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
-            
+
             <button onClick={() => { navigate("/agregar", { state: { tipo: "producto" } }); setIsFabOpen(false); }} className="flex items-center gap-2 bg-white shadow-lg px-4 py-2 rounded-full text-sm hover:bg-gray-100">
               <Package size={16} /> Producto
             </button>

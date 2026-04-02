@@ -103,15 +103,28 @@ const Alerts = () => {
     <div className="min-h-screen bg-slate-50 flex flex-col">
 
       {/* NAVBAR */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
+        {/* Desktop */}
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f]">
+          <span
+            onClick={() => navigate("/home")}
+            className="cursor-pointer hover:text-[#bc004f]"
+          >
             Inventario
           </span>
-          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f]">
+
+          <span
+            onClick={() => navigate("/ventas")}
+            className="cursor-pointer hover:text-[#bc004f]"
+          >
             Ventas
+          </span>
+
+          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
+            Alertas
           </span>
         </div>
 
@@ -119,18 +132,66 @@ const Alerts = () => {
           <Bell className="text-[#bc004f]" />
 
           <div ref={menuRef} className="relative">
-            <div onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 cursor-pointer">
+            <div
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="flex items-center gap-2 cursor-pointer"
+            >
               <img
-                src={`https://ui-avatars.com/api/?name=${user.nombre.replace(" ", "+")}`}
-                className="w-9 h-9 rounded-full"
+                src={`https://ui-avatars.com/api/?name=${user.nombre.replace(
+                  " ",
+                  "+"
+                )}&background=bc004f&color=fff`}
+                className="w-9 h-9 rounded-full object-cover"
+                alt="Avatar"
               />
-              <span className="hidden md:block">{user.nombre.split(" ")[0]}</span>
+
+              <span className="hidden md:block text-sm font-medium text-gray-700">
+                {user.nombre.split(" ")[0]}
+              </span>
             </div>
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
-                <button onClick={handleLogout} className="p-2 text-red-500 w-full text-left">
-                  <LogOut size={16}/> Cerrar sesión
+
+                {/* Info usuario */}
+                <div className="px-3 py-2 border-b mb-2">
+                  <p className="font-semibold text-gray-800">
+                    {user.nombre}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {user.rol}
+                  </p>
+                </div>
+
+                {/* Móvil */}
+                <div className="flex flex-col md:hidden border-b mb-2 pb-2">
+                  <button
+                    onClick={() => {
+                      navigate("/home");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Inventario
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      navigate("/ventas");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Ventas
+                  </button>
+                </div>
+
+                {/* Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
+                >
+                  <LogOut size={16} /> Cerrar sesión
                 </button>
               </div>
             )}
@@ -176,11 +237,11 @@ const Alerts = () => {
                   </div>
 
                   <div className={`w-12 h-12 flex items-center justify-center rounded-xl ${isExpired ? "bg-red-100" : "bg-pink-100"}`}>
-                    {isExpired ? <MdWarning size={24}/> : <MdAccessTime size={24}/>}
+                    {isExpired ? <MdWarning size={24} /> : <MdAccessTime size={24} />}
                   </div>
                 </div>
 
-                <hr className="my-4"/>
+                <hr className="my-4" />
 
                 <div className="flex justify-between mb-4">
                   <div>
@@ -220,7 +281,7 @@ const Alerts = () => {
           className="border-2 border-dashed rounded-3xl p-10 text-center mt-10 cursor-pointer hover:bg-gray-50"
         >
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto shadow">
-            <IoAdd size={30}/>
+            <IoAdd size={30} />
           </div>
           <p className="font-bold mt-3">Agregar Medicamento</p>
         </div>
@@ -228,22 +289,8 @@ const Alerts = () => {
       </div>
 
       {/* FOOTER */}
-      <footer className="w-full mt-auto bg-white border-t flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
-        <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          © 2026 Farmacia Médica Rincón
-        </p>
-
-        <div className="flex gap-8">
-          <span className="text-[10px] text-gray-400 hover:text-[#bc004f] cursor-pointer">
-            Privacidad
-          </span>
-          <span className="text-[10px] text-gray-400 hover:text-[#bc004f] cursor-pointer">
-            Términos
-          </span>
-          <span className="text-[10px] text-gray-400 hover:text-[#bc004f] cursor-pointer">
-            Contacto
-          </span>
-        </div>
+      <footer className="w-full mt-auto bg-white border-t border-gray-200 flex items-center justify-center px-12 py-8 mt-12">
+        <p className="text-[10px] uppercase tracking-widest text-gray-400">© 2026 Farmacia Médica Rincón.</p>
       </footer>
 
     </div>

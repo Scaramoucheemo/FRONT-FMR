@@ -10,15 +10,15 @@ const Ventas = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef(null);
-  
+
   // Referencias para el escáner
   const videoRef = useRef(null);
   const codeReader = useRef(null);
-  
+
   // Estado para el usuario en sesión
   const [currentUser, setCurrentUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  
+
   // Estados para el carrito y ventas
   const [cart, setCart] = useState([]);
   const [products, setProducts] = useState([]);
@@ -26,24 +26,24 @@ const Ventas = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  
+
   // Estados para búsqueda de productos
   const [searchCode, setSearchCode] = useState("");
   const [searching, setSearching] = useState(false);
-  
+
   // Estado para el escáner
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  
+
   // Estados para datos del cliente
   const [customerName, setCustomerName] = useState("");
   const [customerRfc, setCustomerRfc] = useState("");
   const [saleType, setSaleType] = useState("general");
   const [customerId, setCustomerId] = useState(null);
-  
+
   // Estados para cliente existente
   const [existingCustomer, setExistingCustomer] = useState(null);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-  
+
   // Referencia para el input de búsqueda
   const searchInputRef = useRef(null);
 
@@ -54,7 +54,7 @@ const Ventas = () => {
     } catch (err) {
       console.error("Error al inicializar escáner:", err);
     }
-    
+
     // Limpiar al desmontar
     return () => {
       if (codeReader.current) {
@@ -182,12 +182,12 @@ const Ventas = () => {
           }
         });
       }
-      
+
       const topProductIds = Object.entries(productSales)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 3)
         .map(([id]) => parseInt(id));
-      
+
       if (topProductIds.length > 0 && products.length > 0) {
         const topProducts = topProductIds
           .map(id => products.find(p => p.id === id))
@@ -206,13 +206,13 @@ const Ventas = () => {
   const lookupByCode = async (code) => {
     try {
       setSearching(true);
-      
+
       // Buscar en productos locales primero
-      let product = products.find(p => 
-        p.codigo === code || 
+      let product = products.find(p =>
+        p.codigo === code ||
         p.nombre?.toLowerCase().includes(code.toLowerCase())
       );
-      
+
       if (product) {
         addToCart(product);
         setSearchCode("");
@@ -221,7 +221,7 @@ const Ventas = () => {
         }
         return;
       }
-      
+
       // Si no está en local, buscar en el backend
       try {
         const data = await fetchAPI(`/medicamentos?codigo=${code}`);
@@ -241,7 +241,7 @@ const Ventas = () => {
       } catch (err) {
         console.log("No encontrado en backend");
       }
-      
+
       setError(`Producto "${code}" no encontrado`);
     } catch (err) {
       setError("Error al buscar producto: " + err.message);
@@ -253,18 +253,18 @@ const Ventas = () => {
   // Iniciar escáner
   const startScanner = () => {
     setIsScannerOpen(true);
-    
+
     setTimeout(() => {
       if (!videoRef.current) {
         console.error("Video ref no disponible");
         return;
       }
-      
+
       if (!codeReader.current) {
         console.error("Code reader no disponible");
         return;
       }
-      
+
       try {
         codeReader.current.decodeFromVideoDevice(
           null,
@@ -295,7 +295,7 @@ const Ventas = () => {
       if (codeReader.current) {
         codeReader.current.reset();
       }
-      
+
       if (videoRef.current && videoRef.current.srcObject) {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         videoRef.current.srcObject = null;
@@ -303,7 +303,7 @@ const Ventas = () => {
     } catch (err) {
       console.error("Error al cerrar scanner:", err);
     }
-    
+
     setIsScannerOpen(false);
   };
 
@@ -317,14 +317,14 @@ const Ventas = () => {
   const addToCart = (product, quantity = 1) => {
     setCart(prevCart => {
       const existingItem = prevCart.find(item => item.id === product.id);
-      
+
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantity;
         if (newQuantity > product.stock) {
           setError(`Stock insuficiente para ${product.nombre}. Stock disponible: ${product.stock}`);
           return prevCart;
         }
-        
+
         return prevCart.map(item =>
           item.id === product.id
             ? { ...item, quantity: newQuantity }
@@ -335,11 +335,11 @@ const Ventas = () => {
           setError(`Stock insuficiente para ${product.nombre}. Stock disponible: ${product.stock}`);
           return prevCart;
         }
-        
+
         return [...prevCart, { ...product, quantity }];
       }
     });
-    
+
     setSuccess(`${product.nombre} agregado al carrito`);
     setTimeout(() => setSuccess(null), 3000);
   };
@@ -350,14 +350,14 @@ const Ventas = () => {
       removeFromCart(productId);
       return;
     }
-    
+
     setCart(prevCart => {
       const product = prevCart.find(item => item.id === productId);
       if (product && newQuantity > product.stock) {
         setError(`Stock insuficiente. Stock disponible: ${product.stock}`);
         return prevCart;
       }
-      
+
       return prevCart.map(item =>
         item.id === productId
           ? { ...item, quantity: newQuantity }
@@ -394,14 +394,14 @@ const Ventas = () => {
   // Buscar o crear cliente
   const handleCustomerSearch = async () => {
     if (!customerName.trim() && !customerRfc.trim()) return;
-    
+
     try {
       const clientes = await fetchAPI('/clientes');
-      const found = Array.isArray(clientes) ? clientes.find(c => 
+      const found = Array.isArray(clientes) ? clientes.find(c =>
         c.nombre?.toLowerCase().includes(customerName.toLowerCase()) ||
         c.rfc === customerRfc
       ) : null;
-      
+
       if (found) {
         setExistingCustomer(found);
         setCustomerId(found.id);
@@ -428,10 +428,10 @@ const Ventas = () => {
       setError("El carrito está vacío");
       return;
     }
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // Crear la venta
       const ventaData = {
@@ -451,7 +451,7 @@ const Ventas = () => {
           subtotal: item.precio * item.quantity
         }))
       };
-      
+
       // Intentar guardar en backend
       try {
         await fetchAPI('/ventas', {
@@ -463,17 +463,17 @@ const Ventas = () => {
         console.error("Error al guardar en backend:", err);
         // Continuamos aunque falle el backend
       }
-      
+
       setSuccess(`Venta realizada exitosamente por ${currentUser?.nombre}`);
-      
+
       setCart([]);
       setCustomerName("");
       setCustomerRfc("");
       setCustomerId(null);
       setExistingCustomer(null);
-      
+
       printTicket();
-      
+
     } catch (err) {
       setError("Error al procesar la venta: " + err.message);
     } finally {
@@ -512,7 +512,7 @@ const Ventas = () => {
       ${currentUser?.nombre ? `Atendió: ${currentUser.nombre}` : ''}
       ========================================
     `;
-    
+
     console.log(ticketContent);
     alert(`Venta completada. Total: $${calculateTotal().toFixed(2)}`);
   };
@@ -557,7 +557,7 @@ const Ventas = () => {
     <div className="min-h-screen bg-[#fffbff] flex flex-col">
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
-        <h1  onClick={() => navigate("/home")}
+        <h1 onClick={() => navigate("/home")}
           className="font-bold text-lg cursor-pointer">Farmacia Médica Rincón</h1>
 
         <div className="hidden md:flex gap-6">
@@ -611,10 +611,10 @@ const Ventas = () => {
                     Ventas
                   </button>
                 </div>
-                <button  onClick={() => navigate("/config")} className="flex gap-2 p-2 w-full hover:bg-gray-100 rounded-lg">
+                <button onClick={() => navigate("/config")} className="flex gap-2 p-2 w-full hover:bg-gray-100 rounded-lg">
                   <User size={16} /> Configuración
                 </button>
-                <button 
+                <button
                   onClick={handleLogout}
                   className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
                 >
@@ -667,7 +667,7 @@ const Ventas = () => {
             </button>
           </div>
         )}
-        
+
         {success && (
           <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex justify-between items-center">
             <span>{success}</span>
@@ -726,7 +726,7 @@ const Ventas = () => {
                       Escanear
                     </button>
                   </div>
-                  <div 
+                  <div
                     onClick={startScanner}
                     className="p-6 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center text-center gap-3 bg-gray-50 hover:bg-gray-100 transition-colors group cursor-pointer"
                   >
@@ -760,7 +760,7 @@ const Ventas = () => {
                     onChange={(e) => setCustomerRfc(e.target.value)}
                   />
                   <div className="flex gap-4">
-                    <select 
+                    <select
                       className="w-full px-4 py-3.5 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 text-sm appearance-none"
                       value={saleType}
                       onChange={(e) => setSaleType(e.target.value)}
@@ -946,30 +946,8 @@ const Ventas = () => {
       </main>
 
       {/* Footer */}
-      <footer className="w-full mt-auto bg-white border-t border-gray-200 flex flex-col md:flex-row justify-between items-center px-12 py-8 gap-4">
-        <p className="text-[10px] uppercase tracking-widest text-gray-400">
-          © 2026 Farmacia Médica Rincón. 
-        </p>
-        <div className="flex gap-8">
-          <a
-            className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-[#bc004f] transition-colors"
-            href="#"
-          >
-            Privacidad
-          </a>
-          <a
-            className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-[#bc004f] transition-colors"
-            href="#"
-          >
-            Términos
-          </a>
-          <a
-            className="text-[10px] uppercase tracking-widest text-gray-400 hover:text-[#bc004f] transition-colors"
-            href="#"
-          >
-            Contacto
-          </a>
-        </div>
+      <footer className="w-full mt-auto bg-white border-t border-gray-200 flex items-center justify-center px-12 py-8 mt-12">
+        <p className="text-[10px] uppercase tracking-widest text-gray-400">© 2026 Farmacia Médica Rincón.</p>
       </footer>
 
       {/* Modal para cliente existente */}

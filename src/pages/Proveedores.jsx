@@ -17,7 +17,7 @@ const Proveedores = () => {
   const [proveedores, setProveedores] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   const [verDescontinuados, setVerDescontinuados] = useState(false);
 
   const estadoInicial = {
@@ -26,7 +26,7 @@ const Proveedores = () => {
     correo: "",
     domicilio: ""
   };
-  
+
   const [form, setForm] = useState(estadoInicial);
 
   useEffect(() => {
@@ -50,8 +50,8 @@ const Proveedores = () => {
   const fetchProveedores = async () => {
     try {
       const token = localStorage.getItem("token");
-      const endpoint = verDescontinuados 
-        ? `${API_BASE}/api/proveedores?inactivos=true` 
+      const endpoint = verDescontinuados
+        ? `${API_BASE}/api/proveedores?inactivos=true`
         : `${API_BASE}/api/proveedores`;
 
       const res = await fetch(endpoint, {
@@ -80,18 +80,18 @@ const Proveedores = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const token = localStorage.getItem("token");
-      const url = isEditing 
+      const url = isEditing
         ? `${API_BASE}/api/proveedores/${editingId}`
         : `${API_BASE}/api/proveedores`;
-      
+
       const method = isEditing ? "PUT" : "POST";
-      
+
       const res = await fetch(url, {
         method,
         headers: {
@@ -100,20 +100,20 @@ const Proveedores = () => {
         },
         body: JSON.stringify(form)
       });
-      
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || data.error || "Error al guardar el proveedor");
       }
-      
+
       setSuccess(isEditing ? "Proveedor actualizado" : "Proveedor registrado");
       setForm(estadoInicial);
       setIsEditing(false);
       setEditingId(null);
-      
+
       if (verDescontinuados) setVerDescontinuados(false);
-      else fetchProveedores(); 
-      
+      else fetchProveedores();
+
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError(err.message);
@@ -130,23 +130,23 @@ const Proveedores = () => {
       correo: prov.correo || "",
       domicilio: prov.domicilio || ""
     });
-    setEditingId(prov.id_proveedor || prov.id); 
+    setEditingId(prov.id_proveedor || prov.id);
     setIsEditing(true);
   };
 
   // DAR DE BAJA (Borrado Lógico)
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro que deseas dar de baja a este proveedor?")) return;
-    
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/proveedores/${id}`, {
-        method: "PATCH", 
+        method: "PATCH",
         headers: { "Authorization": `Bearer ${token}` }
       });
-      
+
       if (!res.ok) throw new Error("Error al dar de baja");
-      
+
       setSuccess("Proveedor dado de baja");
       fetchProveedores();
       setTimeout(() => setSuccess(null), 3000);
@@ -159,20 +159,20 @@ const Proveedores = () => {
   // REACTIVAR
   const handleReactivate = async (id) => {
     if (!window.confirm("¿Reactivar este proveedor para que vuelva al directorio activo?")) return;
-    
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/proveedores/${id}`, {
-        method: "PATCH", 
-        headers: { 
+        method: "PATCH",
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` 
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ estado: true })
       });
-      
+
       if (!res.ok) throw new Error("Error al reactivar");
-      
+
       setSuccess("Proveedor reactivado con éxito");
       fetchProveedores();
       setTimeout(() => setSuccess(null), 3000);
@@ -186,16 +186,16 @@ const Proveedores = () => {
   const handleHardDelete = async (id) => {
     // Alerta doblemente fuerte
     if (!window.confirm("⚠️ ADVERTENCIA CRÍTICA: Esta acción eliminará el proveedor de forma PERMANENTE de la base de datos y no se podrá deshacer. ¿Deseas continuar?")) return;
-    
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/proveedores/${id}`, {
         method: "DELETE", // Usa DELETE puro
         headers: { "Authorization": `Bearer ${token}` }
       });
-      
+
       if (!res.ok) throw new Error("Error al eliminar permanentemente");
-      
+
       setSuccess("Proveedor eliminado de forma definitiva");
       fetchProveedores();
       setTimeout(() => setSuccess(null), 3000);
@@ -221,26 +221,95 @@ const Proveedores = () => {
   return (
     <div className="min-h-screen bg-[#fffbff] flex flex-col">
       {/* NAVBAR */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
+
+        {/* Desktop */}
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Inventario</span>
-          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Ventas</span>
-          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">Proveedores</span>
+          <span
+            onClick={() => navigate("/home")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Inventario
+          </span>
+
+          <span
+            onClick={() => navigate("/ventas")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Ventas
+          </span>
+
+          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
+            Proveedores
+          </span>
         </div>
+
         <div className="flex items-center gap-4">
-          <Bell className="cursor-pointer hover:text-[#bc004f] transition-colors" />
-          <div className="relative" ref={menuRef}>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <img src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(' ', '+') || 'User'}&background=bc004f&color=fff`} className="w-9 h-9 rounded-full object-cover" alt="Avatar"/>
+          <Bell
+            onClick={() => navigate("/alerts")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          />
+
+          <div ref={menuRef} className="relative">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <img
+                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(" ", "+") || "User"
+                  }&background=bc004f&color=fff`}
+                className="w-9 h-9 rounded-full object-cover"
+                alt="Avatar"
+              />
+
+              <span className="hidden md:block text-sm font-medium text-gray-700">
+                {currentUser?.nombre?.split(" ")[0] || "Usuario"}
+              </span>
             </div>
+
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
+
+                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
-                  <p className="font-semibold text-gray-800">{currentUser?.nombre}</p>
-                  <p className="text-xs text-gray-500">{currentUser?.rol}</p>
+                  <p className="font-semibold text-gray-800">
+                    {currentUser?.nombre || "Usuario"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {currentUser?.rol || "Rol no definido"}
+                  </p>
                 </div>
-                <button onClick={handleLogout} className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg">
+
+                {/* Móvil */}
+                <div className="flex flex-col md:hidden border-b mb-2 pb-2">
+                  <button
+                    onClick={() => {
+                      navigate("/home");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Inventario
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      navigate("/ventas");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Ventas
+                  </button>
+                </div>
+
+                {/* Logout */}
+                <button
+                  onClick={handleLogout}
+                  className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
+                >
                   <LogOut size={16} /> Cerrar sesión
                 </button>
               </div>
@@ -265,13 +334,13 @@ const Proveedores = () => {
         </div>
 
         <div className="grid lg:grid-cols-12 gap-8 h-full">
-          
+
           {/* COLUMNA IZQUIERDA: FORMULARIO */}
           <section className="lg:col-span-7 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Información de la Empresa
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Razón Social *</label>
@@ -323,22 +392,21 @@ const Proveedores = () => {
             {/* ENCABEZADO CON BOTÓN DE TOGGLE */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
-                <Truck className="text-[#bc004f]" size={20} /> 
+                <Truck className="text-[#bc004f]" size={20} />
                 {verDescontinuados ? "Directorio de Bajas" : "Directorio Activo"}
               </h2>
-              <button 
+              <button
                 onClick={() => setVerDescontinuados(!verDescontinuados)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors ${
-                  verDescontinuados ? 'bg-gray-800 text-white' : 'bg-pink-100 text-[#bc004f] hover:bg-pink-200'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors ${verDescontinuados ? 'bg-gray-800 text-white' : 'bg-pink-100 text-[#bc004f] hover:bg-pink-200'
+                  }`}
               >
                 <Archive size={14} />
                 {verDescontinuados ? 'Ver Activos' : 'Ver Bajas'}
               </button>
             </div>
-            
+
             <div className="flex-grow overflow-y-auto pr-2 space-y-4 custom-scrollbar pb-10">
-              
+
               {proveedores.length === 0 && !loading && (
                 <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
                   <p className="text-gray-500">
@@ -349,26 +417,26 @@ const Proveedores = () => {
 
               {proveedores.map(prov => (
                 <div key={prov.id_proveedor || prov.id} className={`group relative p-5 rounded-2xl shadow-sm border hover:shadow-md transition-all overflow-hidden flex flex-col justify-center min-h-[120px] ${verDescontinuados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200'}`}>
-                  
+
                   <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-opacity duration-300 z-10 backdrop-blur-sm">
                     {/* Botón de editar visible en ambos lados */}
                     <button onClick={() => handleEdit(prov)} className="bg-white p-3 rounded-full hover:bg-[#bc004f] hover:text-white transition-colors" title="Editar">
-                      <Pencil size={18}/>
+                      <Pencil size={18} />
                     </button>
-                    
+
                     {/* BOTONES DINÁMICOS: REACTIVAR/DESTRUIR o DAR DE BAJA */}
                     {verDescontinuados ? (
                       <>
                         <button onClick={() => handleReactivate(prov.id_proveedor || prov.id)} className="bg-white p-3 rounded-full hover:bg-green-500 hover:text-white transition-colors" title="Restaurar proveedor">
-                          <RefreshCw size={18}/>
+                          <RefreshCw size={18} />
                         </button>
                         <button onClick={() => handleHardDelete(prov.id_proveedor || prov.id)} className="bg-white p-3 rounded-full hover:bg-red-900 hover:text-white transition-colors" title="Eliminar de forma permanente">
-                          <AlertTriangle size={18}/>
+                          <AlertTriangle size={18} />
                         </button>
                       </>
                     ) : (
                       <button onClick={() => handleDelete(prov.id_proveedor || prov.id)} className="bg-white p-3 rounded-full hover:bg-red-500 hover:text-white transition-colors" title="Dar de baja">
-                        <Trash2 size={18}/>
+                        <Trash2 size={18} />
                       </button>
                     )}
                   </div>
@@ -378,7 +446,7 @@ const Proveedores = () => {
                       <h3 className="font-bold text-gray-900 text-lg truncate pr-8">{prov.razon_social}</h3>
                       {verDescontinuados && <span className="bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded-md">INACTIVO</span>}
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-x-4 mt-2 pt-2 border-t border-gray-100">
                       <p className="text-sm font-semibold text-gray-700 flex items-center gap-1">
                         <Phone size={14} className="text-gray-400" /> {prov.telefono}
@@ -394,9 +462,13 @@ const Proveedores = () => {
               ))}
             </div>
           </aside>
-          
+
         </div>
       </main>
+
+      <footer className="w-full mt-auto bg-white border-t border-gray-200 flex items-center justify-center px-12 py-8 mt-12">
+        <p className="text-[10px] uppercase tracking-widest text-gray-400">© 2026 Farmacia Médica Rincón.</p>
+      </footer>
     </div>
   );
 };

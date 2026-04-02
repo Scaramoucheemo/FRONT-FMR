@@ -52,23 +52,23 @@ const Agregar = () => {
     } catch (err) {
       console.error("Error al inicializar escáner:", err);
     }
-    
+
     return () => {
       if (codeReader.current) {
-        try { codeReader.current.reset(); } catch (e) {console.error(e);}
+        try { codeReader.current.reset(); } catch (e) { console.error(e); }
       }
       if (videoRef.current && videoRef.current.srcObject) {
-        try { videoRef.current.srcObject.getTracks().forEach(track => track.stop()); } catch (e) {}
+        try { videoRef.current.srcObject.getTracks().forEach(track => track.stop()); } catch (e) { }
       }
     };
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
       setCurrentUser(parsedUser);
-      
+
       // Si el rol no es Administrador, lo pateamos de vuelta al Home
       if (parsedUser.rol !== "Administrador") {
         alert("Acceso denegado. Solo los administradores pueden gestionar productos.");
@@ -81,7 +81,7 @@ useEffect(() => {
   }, [navigate]);
 
   // SCANNER
-const startScanner = () => {
+  const startScanner = () => {
     setIsScannerOpen(true);
     let yaEscaneado = false; // 🔒 Nuestro candado
 
@@ -100,7 +100,7 @@ const startScanner = () => {
               setForm((f) => ({ ...f, codigo_barras: code }));
               setSuccess(`Código escaneado: ${code}`);
               setTimeout(() => setSuccess(null), 3000);
-              
+
               stopScanner();
             }
           }
@@ -115,13 +115,13 @@ const startScanner = () => {
 
   const stopScanner = () => {
     if (codeReader.current && typeof codeReader.current.reset === 'function') {
-      try { codeReader.current.reset(); } catch (e) {console.error(e);}
+      try { codeReader.current.reset(); } catch (e) { console.error(e); }
     }
     if (videoRef.current && videoRef.current.srcObject) {
       try {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
         videoRef.current.srcObject = null; // Liberar la memoria de video
-      } catch (e) {console.error(e);}
+      } catch (e) { console.error(e); }
     }
     setIsScannerOpen(false);
   };
@@ -130,28 +130,28 @@ const startScanner = () => {
   const handleImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       setError("Por favor, selecciona una imagen válida");
       setTimeout(() => setError(null), 3000);
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) {
       setError("La imagen no debe exceder los 5MB");
       setTimeout(() => setError(null), 3000);
       return;
     }
-    
+
     setImageFile(file);
     setPreview(URL.createObjectURL(file));
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setForm((f) => ({ 
-      ...f, 
-      [name]: type === "checkbox" ? checked : value 
+    setForm((f) => ({
+      ...f,
+      [name]: type === "checkbox" ? checked : value
     }));
   };
 
@@ -168,30 +168,30 @@ const startScanner = () => {
   // GUARDAR
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const formData = new FormData();
-      
+
       // Agregar campos del formulario a FormData
       Object.entries(form).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== "") {
           formData.append(k, v);
         }
       });
-      
+
       if (imageFile) formData.append("imagen", imageFile);
-      
+
       // Asegúrate de que tu ruta base sea /api/productos en el backend
-      const url = isEditing 
+      const url = isEditing
         ? `${API_BASE}/api/productos/${product.id_producto}`
         : `${API_BASE}/api/productos`;
-      
+
       const method = isEditing ? "PUT" : "POST";
       const token = localStorage.getItem('token');
-      
+
       const res = await fetch(url, {
         method,
         // OJO: No definimos Content-Type porque el navegador lo asigna automáticamente al usar FormData
@@ -200,15 +200,15 @@ const startScanner = () => {
         },
         body: formData
       });
-      
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.message || `Error HTTP: ${res.status}`);
       }
-      
+
       setSuccess(isEditing ? "Producto actualizado correctamente" : "Producto guardado correctamente");
       setTimeout(() => navigate("/home"), 1500);
-      
+
     } catch (err) {
       console.error("Error al guardar:", err);
       setError(err.message || "Error al guardar el producto");
@@ -257,43 +257,95 @@ const startScanner = () => {
     <div className="min-h-screen bg-[#fffbff] flex flex-col">
 
       {/* NAVBAR */}
+      {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
+        {/* Opciones en pantallas medianas en adelante */}
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f] transition-colors">
+          <span
+            onClick={() => navigate("/home")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
             Inventario
           </span>
-          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f] transition-colors">
+
+          <span
+            onClick={() => navigate("/ventas")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
             Ventas
           </span>
+
           <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
             {isEditing ? "Editar Producto" : "Agregar Producto"}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell onClick={() => navigate("/alerts")} className="cursor-pointer hover:text-[#bc004f] transition-colors" />
+          <Bell
+            onClick={() => navigate("/alerts")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          />
 
           <div ref={menuRef} className="relative">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
               <img
-                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(' ', '+') || 'User'}&background=bc004f&color=fff`}
-                className="w-9 h-9 rounded-full cursor-pointer object-cover"
-                alt="User avatar"
+                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(" ", "+") || "User"
+                  }&background=bc004f&color=fff`}
+                className="w-9 h-9 rounded-full object-cover"
+                alt="Avatar"
               />
+
               <span className="hidden md:block text-sm font-medium text-gray-700">
-                {currentUser?.nombre?.split(' ')[0] || 'Usuario'}
+                {currentUser?.nombre?.split(" ")[0] || "Usuario"}
               </span>
             </div>
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
+
+                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
-                  <p className="font-semibold text-gray-800">{currentUser?.nombre || "Usuario"}</p>
-                  <p className="text-xs text-gray-500">{currentUser?.rol || 'Rol no definido'}</p>
+                  <p className="font-semibold text-gray-800">
+                    {currentUser?.nombre || "Usuario"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {currentUser?.rol || "Rol no definido"}
+                  </p>
                 </div>
-                <button onClick={handleLogout} className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg">
+
+                {/* 🔽 Opciones SOLO en móvil */}
+                <div className="flex flex-col md:hidden border-b mb-2 pb-2">
+                  <button
+                    onClick={() => {
+                      navigate("/home");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Inventario
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      navigate("/ventas");
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Ventas
+                  </button>
+                </div>
+
+                {/* Cerrar sesión */}
+                <button
+                  onClick={handleLogout}
+                  className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
+                >
                   <LogOut size={16} /> Cerrar sesión
                 </button>
               </div>
@@ -327,7 +379,7 @@ const startScanner = () => {
           </div>
         </div>
       )}
-      
+
       {success && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 w-96 max-w-[90%]">
           <div className="p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex justify-between items-center shadow-lg">
@@ -360,18 +412,18 @@ const startScanner = () => {
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Información del Producto
             </h2>
-            
+
             <div className="grid md:grid-cols-2 gap-6">
-              
+
               <div className="md:col-span-2">
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                   Código de barras *
                 </label>
                 <div className="flex gap-3">
-                  <input 
-                    name="codigo_barras" 
-                    value={form.codigo_barras} 
-                    onChange={handleChange} 
+                  <input
+                    name="codigo_barras"
+                    value={form.codigo_barras}
+                    onChange={handleChange}
                     placeholder="Ej: 7501234567890"
                     className="flex-1 px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 transition-all"
                   />
@@ -385,23 +437,23 @@ const startScanner = () => {
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                   Nombre comercial *
                 </label>
-                <input 
-                  name="nombre_comercial" 
-                  value={form.nombre_comercial} 
-                  onChange={handleChange} 
+                <input
+                  name="nombre_comercial"
+                  value={form.nombre_comercial}
+                  onChange={handleChange}
                   placeholder="Ej: Aspirina"
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 transition-all"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                   Sustancia activa
                 </label>
-                <input 
-                  name="sustancia_activa" 
-                  value={form.sustancia_activa} 
-                  onChange={handleChange} 
+                <input
+                  name="sustancia_activa"
+                  value={form.sustancia_activa}
+                  onChange={handleChange}
                   placeholder="Ej: Ácido Acetilsalicílico"
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 transition-all"
                 />
@@ -411,39 +463,39 @@ const startScanner = () => {
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                   Presentación *
                 </label>
-                <input 
-                  name="presentacion" 
-                  value={form.presentacion} 
-                  onChange={handleChange} 
+                <input
+                  name="presentacion"
+                  value={form.presentacion}
+                  onChange={handleChange}
                   placeholder="Ej: Caja con 20 tabletas"
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 transition-all"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                   Precio Costo * (MXN)
                 </label>
-                <input 
+                <input
                   type="number"
-                  name="precio_costo" 
-                  value={form.precio_costo} 
-                  onChange={handleChange} 
+                  name="precio_costo"
+                  value={form.precio_costo}
+                  onChange={handleChange}
                   placeholder="0.00"
                   step="0.01"
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 transition-all"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">
                   Precio Venta * (MXN)
                 </label>
-                <input 
+                <input
                   type="number"
-                  name="precio_venta" 
-                  value={form.precio_venta} 
-                  onChange={handleChange} 
+                  name="precio_venta"
+                  value={form.precio_venta}
+                  onChange={handleChange}
                   placeholder="0.00"
                   step="0.01"
                   className="w-full px-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent focus:border-pink-200 focus:ring-0 text-gray-900 transition-all"
@@ -451,19 +503,19 @@ const startScanner = () => {
               </div>
 
               <div className="md:col-span-2 flex items-center gap-3 mt-2 bg-pink-50 p-4 rounded-xl border border-pink-100">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   id="receta"
-                  name="requiere_receta" 
-                  checked={form.requiere_receta} 
-                  onChange={handleChange} 
+                  name="requiere_receta"
+                  checked={form.requiere_receta}
+                  onChange={handleChange}
                   className="w-5 h-5 text-[#bc004f] rounded focus:ring-[#bc004f]"
                 />
                 <label htmlFor="receta" className="font-bold text-gray-700 cursor-pointer">
                   Este medicamento requiere receta médica para su venta (Antibióticos, controlados, etc.)
                 </label>
               </div>
-              
+
             </div>
           </section>
 
@@ -473,10 +525,10 @@ const startScanner = () => {
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <span className="text-[#bc004f]">🖼️</span> Imagen del Producto
               </h2>
-              
+
               <label className="cursor-pointer block border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#bc004f] transition-colors">
                 <input type="file" onChange={handleImage} accept="image/*" hidden />
-                
+
                 {preview ? (
                   <div className="relative">
                     <img src={preview} className="rounded-xl w-full object-cover max-h-64" alt="Preview" />
@@ -492,7 +544,7 @@ const startScanner = () => {
                   </div>
                 )}
               </label>
-              
+
               {!preview && product?.imagen && (
                 <div className="mt-4">
                   <p className="text-xs text-gray-500 mb-2">Imagen actual:</p>
@@ -501,7 +553,7 @@ const startScanner = () => {
               )}
             </div>
           </aside>
-          
+
         </div>
 
         {/* BOTONES */}
@@ -516,6 +568,10 @@ const startScanner = () => {
         </div>
 
       </main>
+
+      <footer className="w-full mt-auto bg-white border-t border-gray-200 flex items-center justify-center px-12 py-8 mt-12">
+        <p className="text-[10px] uppercase tracking-widest text-gray-400">© 2026 Farmacia Médica Rincón.</p>
+      </footer>
     </div>
   );
 };
