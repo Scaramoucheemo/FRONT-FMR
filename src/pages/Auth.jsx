@@ -45,8 +45,16 @@ const Auth = () => {
       if (!response.ok) throw new Error(data.message || "Error al iniciar sesión");
 
       // Si el backend responde con un token, lo guardamos
-      if (data.token) localStorage.setItem("token", data.token);
-
+// Si el backend responde con un token, lo guardamos
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        
+        // ¡NUEVO! Guardamos también los datos del usuario. 
+        // Revisa si tu backend devuelve data.usuario o data.user y ajusta la palabra
+        if (data.usuario) {
+          localStorage.setItem("user", JSON.stringify(data.usuario));
+        }
+      }
       alert("¡Bienvenido!");
       window.location.href = "/home";
     } catch (error) {

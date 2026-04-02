@@ -55,7 +55,7 @@ const Agregar = () => {
     
     return () => {
       if (codeReader.current) {
-        try { codeReader.current.reset(); } catch (e) {}
+        try { codeReader.current.reset(); } catch (e) {console.error(e);}
       }
       if (videoRef.current && videoRef.current.srcObject) {
         try { videoRef.current.srcObject.getTracks().forEach(track => track.stop()); } catch (e) {}
@@ -63,22 +63,50 @@ const Agregar = () => {
     };
   }, []);
 
+useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setCurrentUser(parsedUser);
+      
+      // Si el rol no es Administrador, lo pateamos de vuelta al Home
+      if (parsedUser.rol !== "Administrador") {
+        alert("Acceso denegado. Solo los administradores pueden gestionar productos.");
+        navigate("/home");
+      }
+    } else {
+      navigate("/login");
+    }
+    setLoadingUser(false);
+  }, [navigate]);
+
   // SCANNER
-  const startScanner = () => {
+const startScanner = () => {
     setIsScannerOpen(true);
+    let yaEscaneado = false; // 🔒 Nuestro candado
+
     setTimeout(() => {
       if (!videoRef.current || !codeReader.current) return;
       try {
-        codeReader.current.decodeFromVideoDevice(null, videoRef.current, (result, err) => {
-          if (result) {
-            const code = result.getText();
-            stopScanner();
-            setForm((f) => ({ ...f, codigo_barras: code }));
-            setSuccess(`Código escaneado: ${code}`);
-            setTimeout(() => setSuccess(null), 3000);
+        codeReader.current.decodeFromVideoDevice(
+          null,
+          videoRef.current,
+          (result, err) => {
+            // Solo entra si hay resultado Y el candado está abierto
+            if (result && !yaEscaneado) {
+              yaEscaneado = true; // 🔒 Cerramos el candado inmediatamente
+              const code = result.getText();
+              console.error(err);
+              setForm((f) => ({ ...f, codigo_barras: code }));
+              setSuccess(`Código escaneado: ${code}`);
+              setTimeout(() => setSuccess(null), 3000);
+              
+              stopScanner();
+            }
           }
-        });
+        );
       } catch (err) {
+        console.error(err);
         setError("Error al iniciar la cámara. Verifica los permisos.");
         setIsScannerOpen(false);
       }
@@ -86,10 +114,14 @@ const Agregar = () => {
   };
 
   const stopScanner = () => {
-    if (codeReader.current) codeReader.current.reset();
-    if (videoRef.current?.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+    if (codeReader.current && typeof codeReader.current.reset === 'function') {
+      try { codeReader.current.reset(); } catch (e) {console.error(e);}
+    }
+    if (videoRef.current && videoRef.current.srcObject) {
+      try {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject = null; // Liberar la memoria de video
+      } catch (e) {console.error(e);}
     }
     setIsScannerOpen(false);
   };
