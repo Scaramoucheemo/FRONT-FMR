@@ -9,9 +9,9 @@ import Agregar from "./pages/Agregar";
 import Auth from "./pages/Auth";
 import Ventas from "./pages/Ventas";
 import Proveedores from "./pages/Proveedores";
+import Lotes from "./pages/Lotes";
 import Cliente from "./pages/Cliente";
 import Doctores from "./pages/Doctores";
-
 
 
 function App() {
@@ -27,7 +27,8 @@ function App() {
       <Route path="/Proveedores" element={<Proveedores />} />
       <Route path="/Clientes" element={<Cliente />} />
       <Route path="/Doctores" element={<Doctores />} />
-
+      <Route path="/Lotes" element={<Lotes />} />
+      
     </Routes>
   );
 }
