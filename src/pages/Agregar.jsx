@@ -1,12 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Bell, User, LogOut, Scan, X, Save } from "lucide-react";
+import { Bell, User, LogOut, Scan, X, Save, AlertCircle } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import Swal from 'sweetalert2'; 
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { useAlerts } from "../Components/useAlert";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const Agregar = () => {
   const navigate = useNavigate();
+  const alertCount = useAlerts();
   const location = useLocation();
   const product = location.state?.product;
   const isEditing = !!product;
@@ -25,7 +30,7 @@ const Agregar = () => {
   const codeReader = useRef(null);
   const menuRef = useRef(null);
 
-  // 1. Estado alineado EXACTAMENTE con el modelo de Sequelize
+  // Estado alineado EXACTAMENTE con el modelo de Sequelize
   const [form, setForm] = useState({
     codigo_barras: product?.codigo_barras || "",
     nombre_comercial: product?.nombre_comercial || "",
@@ -36,7 +41,16 @@ const Agregar = () => {
     requiere_receta: product?.requiere_receta || false
   });
 
-  // Cargar usuario actual (simplificado para leer del localStorage)
+  // INICIALIZAR AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 600,
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
+  // Cargar usuario actual
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -45,7 +59,7 @@ const Agregar = () => {
     setLoadingUser(false);
   }, []);
 
-  // INIT SCANNER
+// INIT SCANNER
   useEffect(() => {
     try {
       codeReader.current = new BrowserMultiFormatReader();
@@ -54,11 +68,16 @@ const Agregar = () => {
     }
 
     return () => {
-      if (codeReader.current) {
-        try { codeReader.current.reset(); } catch (e) { console.error(e); }
+      // FIX: Verificamos silenciosamente si la función existe antes de usarla
+      if (codeReader.current && typeof codeReader.current.reset === 'function') {
+        try { codeReader.current.reset(); } catch (e) { }
       }
+      
+      // Esto es lo que realmente apaga el foquito de la cámara
       if (videoRef.current && videoRef.current.srcObject) {
-        try { videoRef.current.srcObject.getTracks().forEach(track => track.stop()); } catch (e) { }
+        try { 
+          videoRef.current.srcObject.getTracks().forEach(track => track.stop()); 
+        } catch (e) { }
       }
     };
   }, []);
@@ -69,10 +88,16 @@ const Agregar = () => {
       const parsedUser = JSON.parse(savedUser);
       setCurrentUser(parsedUser);
 
-      // Si el rol no es Administrador, lo pateamos de vuelta al Home
       if (parsedUser.rol !== "Administrador") {
-        alert("Acceso denegado. Solo los administradores pueden gestionar productos.");
-        navigate("/home");
+        // SWEETALERT: Acceso Denegado
+        Swal.fire({
+          icon: 'error',
+          title: 'Acceso Denegado',
+          text: 'Solo los administradores pueden gestionar productos.',
+          confirmButtonColor: '#bc004f'
+        }).then(() => {
+          navigate("/home");
+        });
       }
     } else {
       navigate("/login");
@@ -83,7 +108,7 @@ const Agregar = () => {
   // SCANNER
   const startScanner = () => {
     setIsScannerOpen(true);
-    let yaEscaneado = false; // 🔒 Nuestro candado
+    let yaEscaneado = false; 
 
     setTimeout(() => {
       if (!videoRef.current || !codeReader.current) return;
@@ -92,9 +117,8 @@ const Agregar = () => {
           null,
           videoRef.current,
           (result, err) => {
-            // Solo entra si hay resultado Y el candado está abierto
             if (result && !yaEscaneado) {
-              yaEscaneado = true; // 🔒 Cerramos el candado inmediatamente
+              yaEscaneado = true; 
               const code = result.getText();
               console.error(err);
               setForm((f) => ({ ...f, codigo_barras: code }));
@@ -120,7 +144,7 @@ const Agregar = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       try {
         videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-        videoRef.current.srcObject = null; // Liberar la memoria de video
+        videoRef.current.srcObject = null; 
       } catch (e) { console.error(e); }
     }
     setIsScannerOpen(false);
@@ -155,7 +179,6 @@ const Agregar = () => {
     }));
   };
 
-  // Validar formulario
   const validateForm = () => {
     if (!form.codigo_barras.trim()) { setError("El código de barras es obligatorio"); return false; }
     if (!form.nombre_comercial.trim()) { setError("El nombre comercial es obligatorio"); return false; }
@@ -165,7 +188,6 @@ const Agregar = () => {
     return true;
   };
 
-  // GUARDAR
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -175,7 +197,6 @@ const Agregar = () => {
     try {
       const formData = new FormData();
 
-      // Agregar campos del formulario a FormData
       Object.entries(form).forEach(([k, v]) => {
         if (v !== undefined && v !== null && v !== "") {
           formData.append(k, v);
@@ -184,7 +205,6 @@ const Agregar = () => {
 
       if (imageFile) formData.append("imagen", imageFile);
 
-      // Asegúrate de que tu ruta base sea /api/productos en el backend
       const url = isEditing
         ? `${API_BASE}/api/productos/${product.id_producto}`
         : `${API_BASE}/api/productos`;
@@ -194,7 +214,6 @@ const Agregar = () => {
 
       const res = await fetch(url, {
         method,
-        // OJO: No definimos Content-Type porque el navegador lo asigna automáticamente al usar FormData
         headers: {
           ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
@@ -217,21 +236,44 @@ const Agregar = () => {
     }
   };
 
-  const handleCancel = () => {
-    if (window.confirm("¿Está seguro de cancelar? Los cambios no guardados se perderán.")) {
+  const handleCancel = async () => {
+    // SWEETALERT: Cancelar
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: "Los cambios no guardados se perderán.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Seguir editando'
+    });
+
+    if (result.isConfirmed) {
       navigate("/home");
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm("¿Está seguro de cerrar sesión?")) {
+  const handleLogout = async () => {
+    // SWEETALERT: Cerrar sesión
+    const result = await Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: "Tendrás que volver a ingresar tus credenciales.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/login');
     }
   };
 
-  // cerrar menú
   useEffect(() => {
     const close = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -254,14 +296,12 @@ const Agregar = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#fffbff] flex flex-col">
+    <div className="min-h-screen bg-[#fffbff] flex flex-col overflow-x-hidden">
 
-      {/* NAVBAR */}
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
-        {/* Opciones en pantallas medianas en adelante */}
         <div className="hidden md:flex gap-6">
           <span
             onClick={() => navigate("/home")}
@@ -269,24 +309,27 @@ const Agregar = () => {
           >
             Inventario
           </span>
-
           <span
             onClick={() => navigate("/ventas")}
             className="cursor-pointer hover:text-[#bc004f] transition-colors"
           >
             Ventas
           </span>
-
           <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
             {isEditing ? "Editar Producto" : "Agregar Productos"}
           </span>
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell
-            onClick={() => navigate("/alerts")}
-            className="cursor-pointer hover:text-[#bc004f] transition-colors"
-          />
+          <div className="relative cursor-pointer" onClick={() => navigate("/alerts")}>
+            <Bell className="text-[#bc004f] hover:text-pink-700 transition-colors" />
+            
+            {alertCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-pulse">
+                {alertCount}
+              </span>
+            )}
+          </div>
 
           <div ref={menuRef} className="relative">
             <div
@@ -294,12 +337,10 @@ const Agregar = () => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
               <img
-                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(" ", "+") || "User"
-                  }&background=bc004f&color=fff`}
+                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(" ", "+") || "User"}&background=bc004f&color=fff`}
                 className="w-9 h-9 rounded-full object-cover"
                 alt="Avatar"
               />
-
               <span className="hidden md:block text-sm font-medium text-gray-700">
                 {currentUser?.nombre?.split(" ")[0] || "Usuario"}
               </span>
@@ -307,8 +348,6 @@ const Agregar = () => {
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
-
-                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
                   <p className="font-semibold text-gray-800">
                     {currentUser?.nombre || "Usuario"}
@@ -318,30 +357,21 @@ const Agregar = () => {
                   </p>
                 </div>
 
-                {/* 🔽 Opciones SOLO en móvil */}
                 <div className="flex flex-col md:hidden border-b mb-2 pb-2">
                   <button
-                    onClick={() => {
-                      navigate("/home");
-                      setIsMenuOpen(false);
-                    }}
+                    onClick={() => { navigate("/home"); setIsMenuOpen(false); }}
                     className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
                   >
                     Inventario
                   </button>
-
                   <button
-                    onClick={() => {
-                      navigate("/ventas");
-                      setIsMenuOpen(false);
-                    }}
+                    onClick={() => { navigate("/ventas"); setIsMenuOpen(false); }}
                     className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
                   >
                     Ventas
                   </button>
                 </div>
 
-                {/* Cerrar sesión */}
                 <button
                   onClick={handleLogout}
                   className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
@@ -374,7 +404,7 @@ const Agregar = () => {
       {error && (
         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 w-96 max-w-[90%]">
           <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex justify-between items-center shadow-lg">
-            <span>{error}</span>
+            <div className="flex items-center gap-2"><AlertCircle size={18} /><span>{error}</span></div>
             <button onClick={() => setError(null)} className="font-bold"><X size={16} /></button>
           </div>
         </div>
@@ -393,7 +423,7 @@ const Agregar = () => {
       <main className="flex-grow pt-28 px-6 max-w-7xl mx-auto w-full">
 
         {/* HEADER */}
-        <div className="mb-10">
+        <div className="mb-10" data-aos="fade-down">
           <span className="text-xs text-[#bc004f] font-semibold uppercase tracking-wider">
             {isEditing ? "✏️ EDITAR PRODUCTO" : "➕ NUEVO PRODUCTO"}
           </span>
@@ -407,8 +437,8 @@ const Agregar = () => {
 
         <div className="grid lg:grid-cols-12 gap-8">
 
-          {/* FORMULARIO ADAPTADO AL MODELO */}
-          <section className="lg:col-span-8 bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+          {/* FORMULARIO */}
+          <section data-aos="fade-right" className="lg:col-span-8 bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Información del Producto
             </h2>
@@ -519,8 +549,8 @@ const Agregar = () => {
             </div>
           </section>
 
-          {/* SECCIÓN IMAGEN INTACTA */}
-          <aside className="lg:col-span-4">
+          {/* SECCIÓN IMAGEN */}
+          <aside data-aos="fade-left" className="lg:col-span-4">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                 <span className="text-[#bc004f]">🖼️</span> Imagen del Producto
@@ -557,7 +587,7 @@ const Agregar = () => {
         </div>
 
         {/* BOTONES */}
-        <div className="flex justify-end gap-4 mt-10 pb-10">
+        <div className="flex justify-end gap-4 mt-10 pb-10" data-aos="fade-up">
           <button onClick={handleCancel} className="px-8 py-3 border-2 border-gray-300 rounded-full font-bold text-gray-700 hover:bg-gray-50" disabled={loading}>
             Cancelar
           </button>

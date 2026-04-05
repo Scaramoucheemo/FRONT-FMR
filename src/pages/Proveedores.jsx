@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, LogOut, Save, Truck, Pencil, Trash2, Building2, Phone, Mail, MapPin, Archive, RefreshCw, AlertTriangle } from "lucide-react";
+import Swal from 'sweetalert2'; 
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { useAlerts } from "../Components/useAlert";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const Proveedores = () => {
+  const alertCount = useAlerts();
   const navigate = useNavigate();
   const menuRef = useRef(null);
 
@@ -29,14 +34,30 @@ const Proveedores = () => {
 
   const [form, setForm] = useState(estadoInicial);
 
+  // INICIALIZAR AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 600,
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
       setCurrentUser(parsedUser);
       if (parsedUser.rol !== "Administrador") {
-        alert("Acceso denegado. Solo administradores pueden gestionar proveedores.");
-        navigate("/home");
+        // SWEETALERT: Acceso Denegado
+        Swal.fire({
+          icon: 'error',
+          title: 'Acceso Denegado',
+          text: 'Solo administradores pueden gestionar proveedores.',
+          confirmButtonColor: '#bc004f'
+        }).then(() => {
+          navigate("/home");
+        });
       }
     } else {
       navigate("/login");
@@ -134,9 +155,40 @@ const Proveedores = () => {
     setIsEditing(true);
   };
 
-  // DAR DE BAJA (Borrado Lógico)
+  // SWEETALERT: Cancelar Edición
+  const handleCancelEdit = async () => {
+    const result = await Swal.fire({
+      title: '¿Cancelar edición?',
+      text: "Los cambios no guardados se perderán.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Seguir editando'
+    });
+
+    if (result.isConfirmed) {
+      setForm(estadoInicial);
+      setIsEditing(false);
+      setEditingId(null);
+    }
+  };
+
+  // SWEETALERT: Dar de Baja
   const handleDelete = async (id) => {
-    if (!window.confirm("¿Seguro que deseas dar de baja a este proveedor?")) return;
+    const result = await Swal.fire({
+      title: '¿Dar de baja?',
+      text: "El proveedor pasará al directorio de inactivos.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#FA8072',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, dar de baja',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -157,9 +209,20 @@ const Proveedores = () => {
     }
   };
 
-  // REACTIVAR
+  // SWEETALERT: Reactivar
   const handleReactivate = async (id) => {
-    if (!window.confirm("¿Reactivar este proveedor para que vuelva al directorio activo?")) return;
+    const result = await Swal.fire({
+      title: '¿Restaurar proveedor?',
+      text: "El proveedor volverá al directorio activo.",
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981', // Verde
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, restaurar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem("token");
@@ -184,15 +247,25 @@ const Proveedores = () => {
     }
   };
 
-  // NUEVO: ELIMINAR PERMANENTE (Hard Delete)
+  // SWEETALERT: Eliminar Permanente
   const handleHardDelete = async (id) => {
-    // Alerta doblemente fuerte
-    if (!window.confirm("⚠️ ADVERTENCIA CRÍTICA: Esta acción eliminará el proveedor de forma PERMANENTE de la base de datos y no se podrá deshacer. ¿Deseas continuar?")) return;
+    const result = await Swal.fire({
+      title: '¡ADVERTENCIA CRÍTICA!',
+      text: "Estás a punto de eliminar permanentemente a este proveedor. Esta acción no se puede deshacer.",
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626', // Rojo fuerte
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, ELIMINAR',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/proveedores/${id}`, {
-        method: "DELETE", // Usa DELETE puro
+        method: "DELETE",
         headers: { "Authorization": `Bearer ${token}` }
       });
 
@@ -208,22 +281,27 @@ const Proveedores = () => {
     }
   };
 
-  const handleCancelEdit = () => {
-    setForm(estadoInicial);
-    setIsEditing(false);
-    setEditingId(null);
-  };
+  // SWEETALERT: Logout
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: "Tendrás que volver a ingresar tus credenciales.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    });
 
-  const handleLogout = () => {
-    if (window.confirm("¿Cerrar sesión?")) {
+    if (result.isConfirmed) {
       localStorage.clear();
       navigate("/login");
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#fffbff] flex flex-col">
-      {/* NAVBAR */}
+    <div className="min-h-screen bg-[#fffbff] flex flex-col overflow-x-hidden">
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
@@ -250,10 +328,15 @@ const Proveedores = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell
-            onClick={() => navigate("/alerts")}
-            className="cursor-pointer hover:text-[#bc004f] transition-colors"
-          />
+          <div className="relative cursor-pointer" onClick={() => navigate("/alerts")}>
+                      <Bell className="text-[#bc004f] hover:text-pink-700 transition-colors" />
+                      
+                      {alertCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-pulse">
+                          {alertCount}
+                        </span>
+                      )}
+                    </div>
 
           <div ref={menuRef} className="relative">
             <div
@@ -322,12 +405,12 @@ const Proveedores = () => {
       </nav>
 
       {/* NOTIFICACIONES */}
-      {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg">{error}</div>}
+      {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg"><AlertTriangle className="inline-block mr-2" size={18}/>{error}</div>}
       {success && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-100 text-green-700 p-3 rounded-lg shadow-lg">{success}</div>}
 
       {/* MAIN */}
       <main className="flex-grow pt-28 px-6 max-w-7xl mx-auto w-full">
-        <div className="mb-8">
+        <div className="mb-8" data-aos="fade-down">
           <span className="text-xs text-[#bc004f] font-semibold uppercase tracking-wider">
             {isEditing ? "✏️ EDITAR PROVEEDOR" : "🏢 GESTIÓN DE PROVEEDORES"}
           </span>
@@ -339,7 +422,7 @@ const Proveedores = () => {
         <div className="grid lg:grid-cols-12 gap-8 h-full">
 
           {/* COLUMNA IZQUIERDA: FORMULARIO */}
-          <section className="lg:col-span-7 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
+          <section data-aos="fade-right" className="lg:col-span-7 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Información de la Empresa
             </h2>
@@ -391,7 +474,7 @@ const Proveedores = () => {
           </section>
 
           {/* COLUMNA DERECHA: TARJETAS CON SCROLL INDEPENDIENTE */}
-          <aside className="lg:col-span-5 flex flex-col h-[650px]">
+          <aside data-aos="fade-left" className="lg:col-span-5 flex flex-col h-[650px]">
             {/* ENCABEZADO CON BOTÓN DE TOGGLE */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
@@ -418,16 +501,19 @@ const Proveedores = () => {
                 </div>
               )}
 
-              {proveedores.map(prov => (
-                <div key={prov.id_proveedor || prov.id} className={`group relative p-5 rounded-2xl shadow-sm border hover:shadow-md transition-all overflow-hidden flex flex-col justify-center min-h-[120px] ${verDescontinuados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200'}`}>
+              {proveedores.map((prov, index) => (
+                <div 
+                  key={prov.id_proveedor || prov.id} 
+                  data-aos="fade-up" 
+                  data-aos-delay={(index % 10) * 50} 
+                  className={`group relative p-5 rounded-2xl shadow-sm border hover:shadow-md transition-all overflow-hidden flex flex-col justify-center min-h-[120px] ${verDescontinuados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200'}`}
+                >
 
                   <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-opacity duration-300 z-10 backdrop-blur-sm">
-                    {/* Botón de editar visible en ambos lados */}
                     <button onClick={() => handleEdit(prov)} className="bg-white p-3 rounded-full hover:bg-[#bc004f] hover:text-white transition-colors" title="Editar">
                       <Pencil size={18} />
                     </button>
 
-                    {/* BOTONES DINÁMICOS: REACTIVAR/DESTRUIR o DAR DE BAJA */}
                     {verDescontinuados ? (
                       <>
                         <button onClick={() => handleReactivate(prov.id_proveedor || prov.id)} className="bg-white p-3 rounded-full hover:bg-green-500 hover:text-white transition-colors" title="Restaurar proveedor">

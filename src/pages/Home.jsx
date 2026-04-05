@@ -19,12 +19,16 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import Swal from 'sweetalert2'; 
+import AOS from 'aos'; // IMPORTAMOS AOS
+import 'aos/dist/aos.css'; // IMPORTAMOS LOS ESTILOS DE AOS
+import { useAlerts} from '../Components/useAlert';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const Home = () => {
+  const alertCount = useAlerts();
   const navigate = useNavigate();
-
   const videoRef = useRef(null);
   const codeReader = useRef(null);
   const menuRef = useRef(null);
@@ -40,11 +44,19 @@ const Home = () => {
   const [success, setSuccess] = useState(null);
   const [notification, setNotification] = useState(null);
 
-  // Nuevo estado para ver descontinuados
   const [verDescontinuados, setVerDescontinuados] = useState(false);
 
   const [isFabOpen, setIsFabOpen] = useState(false);
   const fabRef = useRef(null);
+
+  // INICIALIZAR AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 600, // Duración de la animación en ms
+      once: true, // Si es true, la animación solo ocurre una vez al bajar
+      offset: 50, // Cuántos pixeles debe scrollear para que aparezca
+    });
+  }, []);
 
   useEffect(() => {
     const close = e => {
@@ -56,7 +68,6 @@ const Home = () => {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  // FETCH PRODUCTOS (Ahora pide inactivos si el switch está activado)
   const fetchProducts = async () => {
     try {
       setLoading(true);
@@ -93,23 +104,20 @@ const Home = () => {
     }
   };
 
-  // Recargar productos cuando cambie la pestaña de Activos/Descontinuados
   useEffect(() => {
     fetchProducts();
   }, [verDescontinuados]);
 
-  // USER
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     } else {
-      // Si no hay usuario guardado, lo mandamos al login por seguridad
       navigate("/login");
     }
     setLoadingUser(false);
   }, []);
-  // SCANNER INIT & STOP (Mismos que ya tenías)
+
   useEffect(() => {
     try { codeReader.current = new BrowserMultiFormatReader(); } catch (e) { console.error(e); }
     return () => stopScanner();
@@ -153,7 +161,7 @@ const Home = () => {
 
   const startScanner = () => {
     setIsScannerOpen(true);
-    let yaEscaneado = false; // 🔒 Nuestro candado
+    let yaEscaneado = false; 
 
     setTimeout(() => {
       if (!videoRef.current || !codeReader.current) return;
@@ -162,14 +170,12 @@ const Home = () => {
           null,
           videoRef.current,
           (result) => {
-            // Solo entra si hay resultado Y el candado está abierto
             if (result && !yaEscaneado) {
-              yaEscaneado = true; // 🔒 Cerramos el candado
+              yaEscaneado = true;
               const code = result.getText();
-
               setSearchTerm(code);
               stopScanner();
-              lookupByCode(code); // ¡Ahora sí, solo hará 1 sola petición al servidor!
+              lookupByCode(code);
             }
           }
         );
@@ -194,10 +200,19 @@ const Home = () => {
     setIsScannerOpen(false);
   };
 
-  // DELETE
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("¿Seguro que deseas desactivar este producto?");
-    if (!confirmDelete) return;
+    const result = await Swal.fire({
+      title: '¿Desactivar producto?',
+      text: "El producto pasará a la lista de descontinuados y ya no se mostrará en las ventas.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#FA8072',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setLoading(true);
@@ -223,15 +238,23 @@ const Home = () => {
     }
   };
 
-  // REACTIVAR
   const handleReactivate = async (id) => {
-    const confirmRevive = window.confirm("¿Reactivar este producto para que vuelva al inventario?");
-    if (!confirmRevive) return;
+    const result = await Swal.fire({
+      title: '¿Reactivar producto?',
+      text: "El producto volverá al catálogo principal de la farmacia.",
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981', 
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, reactivar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      // Asume que tu endpoint PATCH permite modificar el estado
       const response = await fetch(`${API_BASE}/api/productos/${id}`, {
         method: "PATCH",
         headers: {
@@ -278,8 +301,19 @@ const Home = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm("¿Está seguro de cerrar sesión?")) {
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: "Tendrás que volver a ingresar tus credenciales.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
       localStorage.clear();
       navigate("/login");
     }
@@ -292,13 +326,12 @@ const Home = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#fffbff] flex flex-col">
+    <div className="min-h-screen bg-[#fffbff] flex flex-col overflow-x-hidden">
 
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
-        {/* Opciones en pantallas medianas en adelante */}
         <div className="hidden md:flex gap-6">
           <span
             onClick={() => navigate("/home")}
@@ -312,13 +345,24 @@ const Home = () => {
           >
             Ventas
           </span>
+          <span
+            onClick={() => navigate("/Clientes")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Directorio de Clientes
+          </span>
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell
-            onClick={() => navigate("/alerts")}
-            className="cursor-pointer hover:text-[#bc004f] transition-colors"
-          />
+          <div className="relative cursor-pointer" onClick={() => navigate("/alerts")}>
+            <Bell className="text-[#bc004f] hover:text-pink-700 transition-colors" />
+            
+            {alertCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-pulse">
+                {alertCount}
+              </span>
+            )}
+          </div>
 
           <div ref={menuRef} className="relative">
             <div
@@ -340,8 +384,6 @@ const Home = () => {
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
-
-                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
                   <p className="font-semibold text-gray-800">
                     {user?.nombre || "Usuario"}
@@ -351,7 +393,6 @@ const Home = () => {
                   </p>
                 </div>
 
-                {/* 🔽 Opciones SOLO en móvil */}
                 <div className="flex flex-col md:hidden border-b mb-2 pb-2">
                   <button
                     onClick={() => {
@@ -374,7 +415,6 @@ const Home = () => {
                   </button>
                 </div>
 
-                {/* Cerrar sesión */}
                 <button
                   onClick={handleLogout}
                   className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
@@ -402,19 +442,18 @@ const Home = () => {
       {notification && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-blue-100 text-blue-700 p-3 rounded-lg shadow-lg">{notification}</div>}
 
       {/* MAIN */}
-      <main className="pt-28 px-6 max-w-7xl mx-auto flex-grow">
+      <main className="pt-28 px-6 max-w-7xl mx-auto flex-grow w-full">
 
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between gap-6 mb-10">
-          <div>
+          <div data-aos="fade-right">
             <h1 className="text-5xl font-extrabold">{verDescontinuados ? 'Descontinuados' : 'Inventario General'}</h1>
             <p className="text-gray-600 mt-2">
-              👩‍⚕️ Sesión activa: <span className="font-bold text-[#bc004f]">{user?.nombre || 'Usuario'}</span>
+              Sesión activa: <span className="font-bold text-[#bc004f]">{user?.nombre || 'Usuario'}</span>
             </p>
           </div>
 
-          <div className="flex gap-3 flex-wrap">
-            {/* BOTÓN PARA ALTERNAR VISTA */}
+          <div className="flex gap-3 flex-wrap" data-aos="fade-left">
             <button
               onClick={() => setVerDescontinuados(!verDescontinuados)}
               className={`px-4 py-3 rounded-xl flex items-center gap-2 transition-colors font-bold ${verDescontinuados ? 'bg-gray-800 text-white' : 'bg-pink-100 text-[#bc004f] hover:bg-pink-200'
@@ -436,16 +475,16 @@ const Home = () => {
 
         {!verDescontinuados && (
           <div className="grid md:grid-cols-3 gap-6 mb-10">
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div data-aos="zoom-in" data-aos-delay="0" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
               <h2 className="text-3xl font-bold">{products.length}</h2>
               <p className="text-xs text-gray-400 uppercase tracking-wider">PRODUCTOS ACTIVOS</p>
             </div>
-            <div className="bg-pink-50 p-6 rounded-2xl shadow-sm border border-pink-200">
+            <div data-aos="zoom-in" data-aos-delay="100" className="bg-pink-50 p-6 rounded-2xl shadow-sm border border-pink-200">
               <h2 className="text-3xl font-bold text-red-500">0</h2>
               <p className="text-xs text-red-500 uppercase tracking-wider">PRODUCTOS POR VENCER</p>
               <p className="text-[10px] text-gray-400 mt-1">Próximos 3 meses</p>
             </div>
-            <div className="bg-black text-white p-6 rounded-2xl shadow-sm">
+            <div data-aos="zoom-in" data-aos-delay="200" className="bg-black text-white p-6 rounded-2xl shadow-sm">
               <h2 className="text-2xl font-bold">Resumen Diario</h2>
               <p className="text-xs text-gray-300 mt-2">Ventas del día: --</p>
               <p className="text-xs text-gray-300">Ganancias: --</p>
@@ -460,8 +499,13 @@ const Home = () => {
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProducts.map(p => (
-              <div key={p.id} className={`group bg-white rounded-3xl shadow-sm overflow-hidden relative border transition-all hover:shadow-lg ${verDescontinuados ? 'border-gray-400 opacity-80' : 'border-gray-200'}`}>
+            {filteredProducts.map((p, index) => (
+              <div 
+                key={p.id} 
+                data-aos="fade-up" 
+                data-aos-delay={(index % 10) * 50} // Efecto cascada suave que se reinicia cada 10 items
+                className={`group bg-white rounded-3xl shadow-sm overflow-hidden relative border transition-all hover:shadow-lg ${verDescontinuados ? 'border-gray-400 opacity-80' : 'border-gray-200'}`}
+              >
 
                 <div className="w-full h-52 bg-gray-50 flex items-center justify-center p-4 relative">
                   <img src={p.image} className={`max-w-full max-h-full object-contain mix-blend-multiply ${verDescontinuados ? 'grayscale' : ''}`} alt={p.name} />
@@ -474,7 +518,6 @@ const Home = () => {
 
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-all duration-300">
 
-                  {/* ¡SEGURIDAD VISUAL! Solo el Admin ve estos botones */}
                   {user?.rol === 'Administrador' && (
                     <>
                       <button onClick={() => handleEdit(p)} className="bg-white p-3 rounded-full hover:bg-[#bc004f] hover:text-white transition-colors" title="Editar producto">
@@ -493,7 +536,6 @@ const Home = () => {
                     </>
                   )}
 
-                  {/* Opcional: Si es Vendedor, puedes mostrarle un ojito para ver detalles en vez de editar */}
                   {user?.rol !== 'Administrador' && (
                     <span className="text-white font-bold tracking-widest text-sm">SOLO LECTURA</span>
                   )}
@@ -526,7 +568,7 @@ const Home = () => {
         <p className="text-[10px] uppercase tracking-widest text-gray-400">© 2026 Farmacia Médica Rincón.</p>
       </footer>
 
-      {/* FAB - PROTEGIDO POR ROL Y RESTAURADO */}
+      {/* FAB - PROTEGIDO POR ROL */}
       {user?.rol === 'Administrador' && (
         <div ref={fabRef} className="fixed bottom-6 right-6 flex flex-col items-end gap-3 z-50">
           <div className={`flex flex-col items-end gap-2 transition-all duration-300 ${isFabOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>

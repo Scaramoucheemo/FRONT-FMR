@@ -5,6 +5,10 @@ import {
   ClipboardList, AlertCircle, Pencil, Trash2, Archive,
   AlertTriangle, PlusCircle, ChevronDown
 } from "lucide-react";
+import Swal from 'sweetalert2'; 
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import { useAlerts } from "../Components/useAlert";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -72,8 +76,12 @@ const CustomDropdown = ({ value, options, onChange, onAddNew, placeholder, addNe
 // -------------------------------------------------------------
 
 const Lotes = () => {
+  const alertCount = useAlerts();
   const navigate = useNavigate();
   const menuRef = useRef(null);
+  
+  // CANDADO INTELIGENTE: Para no bombardear al usuario con la alerta de caducidad
+  const alertaMostrada = useRef(false);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -85,7 +93,6 @@ const Lotes = () => {
   const [productos, setProductos] = useState([]);
   const [proveedores, setProveedores] = useState([]);
 
-  // AHORA ESTA VARIABLE CONTROLA SI VEMOS ACTIVOS O AGOTADOS (CANTIDAD 0)
   const [verAgotados, setVerAgotados] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -102,14 +109,29 @@ const Lotes = () => {
 
   const [form, setForm] = useState(estadoInicial);
 
+  // INICIALIZAR AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 600,
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
       const parsedUser = JSON.parse(savedUser);
       setCurrentUser(parsedUser);
       if (parsedUser.rol !== "Administrador") {
-        alert("Acceso denegado.");
-        navigate("/home");
+        Swal.fire({
+          icon: 'error',
+          title: 'Acceso Denegado',
+          text: 'No tienes los permisos necesarios para acceder a este módulo.',
+          confirmButtonColor: '#bc004f'
+        }).then(() => {
+          navigate("/home");
+        });
       }
     } else {
       navigate("/login");
@@ -126,7 +148,6 @@ const Lotes = () => {
       const token = localStorage.getItem("token");
       const headers = { "Authorization": `Bearer ${token}` };
 
-      // Cambiamos a la query "agotados"
       const endpointLotes = verAgotados
         ? `${API_BASE}/api/lotes?agotados=true`
         : `${API_BASE}/api/lotes`;
@@ -137,7 +158,46 @@ const Lotes = () => {
         fetch(`${API_BASE}/api/proveedores`, { headers })
       ]);
 
-      if (resLotes.ok) setLotes(await resLotes.json());
+      if (resLotes.ok) {
+        const dataLotes = await resLotes.json();
+        setLotes(dataLotes);
+
+        // 🚨 LÓGICA DE ALERTA INTELIGENTE (Solo para lotes activos)
+        if (!verAgotados && !alertaMostrada.current && dataLotes.length > 0) {
+          
+          // Filtramos problemas (Bajo stock = 5 unidades o menos. Caducidad = menos de 3 meses)
+          const lotesBajoStock = dataLotes.filter(l => l.cantidad <= 5 && l.cantidad > 0);
+          const lotesPorCaducar = dataLotes.filter(l => {
+            const diff = (new Date(l.fecha_caducidad) - new Date()) / (1000 * 60 * 60 * 24 * 30);
+            return diff <= 3; // Menos de 3 meses o ya caducado
+          });
+
+          // Si detectamos problemas, lanzamos una alerta resumida
+          if (lotesBajoStock.length > 0 || lotesPorCaducar.length > 0) {
+            let mensajeHTML = `<div style="text-align: left; font-size: 0.9rem;">`;
+            
+            if (lotesPorCaducar.length > 0) {
+              mensajeHTML += `<p><b style="color: #dc2626;"> Tienes ${lotesPorCaducar.length} lote(s)</b> próximos a caducar o ya caducados.</p>`;
+            }
+            if (lotesBajoStock.length > 0) {
+              mensajeHTML += `<p><b style="color: #ea580c;"> Tienes ${lotesBajoStock.length} lote(s)</b> con 5 unidades o menos.</p>`;
+            }
+            mensajeHTML += `<p style="margin-top: 10px; color: #6b7280; font-size: 0.8rem;">Revisa las etiquetas en el directorio para más detalles.</p></div>`;
+
+            Swal.fire({
+              title: 'Atención en Inventario',
+              html: mensajeHTML,
+              icon: 'warning',
+              confirmButtonColor: '#bc004f',
+              confirmButtonText: 'Entendido'
+            });
+          }
+          
+          // Cerramos el candado para que no vuelva a molestar
+          alertaMostrada.current = true; 
+        }
+      }
+
       if (resProductos.ok) setProductos(await resProductos.json());
       if (resProveedores.ok) setProveedores(await resProveedores.json());
 
@@ -205,15 +265,44 @@ const Lotes = () => {
       observaciones: lote.observaciones || ""
     });
 
-    // BLINDAJE: Atrapamos la PK no importa cómo la haya mapeado Sequelize
     const idReal = lote.id_registro_lote || lote.id_lote || lote.id;
     setEditingId(idReal);
     setIsEditing(true);
   };
 
-  // ELIMINACIÓN PERMANENTE (Solo disponible si está agotado)
+  const handleCancelEdit = async () => {
+    const result = await Swal.fire({
+      title: '¿Cancelar edición?',
+      text: "Los cambios no guardados se perderán.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, cancelar',
+      cancelButtonText: 'Seguir editando'
+    });
+
+    if (result.isConfirmed) {
+      setForm(estadoInicial);
+      setIsEditing(false);
+      setEditingId(null);
+    }
+  };
+
   const handleHardDelete = async (id) => {
-    if (!window.confirm("⚠️ ¿Eliminar el lote PERMANENTEMENTE del historial? Esta acción destruirá el registro para siempre.")) return;
+    const result = await Swal.fire({
+      title: '¡ADVERTENCIA CRÍTICA!',
+      text: "Estás a punto de destruir permanentemente el registro histórico de este lote. Esta acción no se puede deshacer.",
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626', // Rojo
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Sí, DESTRUIR REGISTRO',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/lotes/${id}`, {
@@ -230,9 +319,21 @@ const Lotes = () => {
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm("¿Cerrar sesión?")) {
-      localStorage.clear(); navigate("/login");
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: "Tendrás que volver a ingresar tus credenciales.",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#bc004f',
+      cancelButtonColor: '#9ca3af',
+      confirmButtonText: 'Cerrar sesión',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      localStorage.clear();
+      navigate("/login");
     }
   };
 
@@ -245,8 +346,6 @@ const Lotes = () => {
     return { texto: "VIGENTE", color: "bg-green-500 text-white" };
   };
 
-  // Preparamos las opciones para nuestros Dropdowns 
-  // Ahora muestra TODOS los productos, sin restricciones.
   const opcionesProductos = productos.map(p => ({
     id: p.id_producto,
     label: p.nombre_comercial,
@@ -259,17 +358,15 @@ const Lotes = () => {
     subLabel: p.telefono
   }));
 
-  // Input Base unificado sin bordes azules nativos
   const inputClass = "w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-2 border-transparent outline-none focus:outline-none focus:ring-0 focus:border-[#FA8072] hover:border-[#FA8072]/50 transition-all duration-300";
 
   return (
-    <div className="min-h-screen bg-[#fffbff] flex flex-col">
+    <div className="min-h-screen bg-[#fffbff] flex flex-col overflow-x-hidden">
     
       {/* NAVBAR */}
       <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
         <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
 
-        {/* Opciones en pantallas medianas en adelante */}
         <div className="hidden md:flex gap-6">
           <span
             onClick={() => navigate("/home")}
@@ -290,10 +387,15 @@ const Lotes = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <Bell
-            onClick={() => navigate("/alerts")}
-            className="cursor-pointer hover:text-[#bc004f] transition-colors"
-          />
+          <div className="relative cursor-pointer" onClick={() => navigate("/alerts")}>
+                      <Bell className="text-[#bc004f] hover:text-pink-700 transition-colors" />
+                      
+                      {alertCount > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-pulse">
+                          {alertCount}
+                        </span>
+                      )}
+                    </div>
 
           <div ref={menuRef} className="relative">
             <div
@@ -312,7 +414,6 @@ const Lotes = () => {
 
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
-                {/* Info usuario */}
                 <div className="px-3 py-2 border-b mb-2">
                   <p className="font-semibold text-gray-800">
                     {currentUser?.nombre || "Usuario"}
@@ -322,7 +423,6 @@ const Lotes = () => {
                   </p>
                 </div>
 
-                {/* Opciones SOLO en móvil */}
                 <div className="flex flex-col md:hidden border-b mb-2 pb-2">
                   <button
                     onClick={() => {
@@ -344,7 +444,6 @@ const Lotes = () => {
                   </button>
                 </div>
 
-                {/* Cerrar sesión */}
                 <button
                   onClick={handleLogout}
                   className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
@@ -357,13 +456,13 @@ const Lotes = () => {
         </div>
       </nav>
 
-      {/* NOTIFICACIONES */}
+      {/* NOTIFICACIONES TOAST */}
       {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg flex items-center gap-2"><AlertCircle size={18} />{error}</div>}
       {success && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-100 text-green-700 p-3 rounded-lg shadow-lg">{success}</div>}
 
       {/* MAIN */}
       <main className="flex-grow pt-28 px-6 max-w-7xl mx-auto w-full">
-        <div className="mb-8">
+        <div className="mb-8" data-aos="fade-down">
           <span className="text-xs text-[#bc004f] font-semibold uppercase tracking-wider">
             {isEditing ? "✏️ GESTIÓN DE CORRECCIONES" : "📦 GESTIÓN DE INVENTARIO"}
           </span>
@@ -375,7 +474,7 @@ const Lotes = () => {
         <div className="grid lg:grid-cols-12 gap-8 h-full">
 
           {/* FORMULARIO */}
-          <section className="lg:col-span-5 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
+          <section data-aos="fade-right" className="lg:col-span-5 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Datos de la Mercancía
             </h2>
@@ -448,7 +547,7 @@ const Lotes = () => {
 
               <div className="flex justify-end mt-2 gap-4">
                 {isEditing && (
-                  <button type="button" onClick={() => { setForm(estadoInicial); setIsEditing(false); }} className="px-6 py-3 border-2 border-gray-300 rounded-xl font-bold text-gray-700 hover:bg-gray-50 outline-none focus:outline-none">
+                  <button type="button" onClick={handleCancelEdit} className="px-6 py-3 border-2 border-gray-300 rounded-xl font-bold text-gray-700 hover:bg-gray-50 outline-none focus:outline-none">
                     Cancelar
                   </button>
                 )}
@@ -460,7 +559,7 @@ const Lotes = () => {
           </section>
 
           {/* TARJETAS DE LOTES */}
-          <aside className="lg:col-span-7 flex flex-col h-[750px]">
+          <aside data-aos="fade-left" className="lg:col-span-7 flex flex-col h-[750px]">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
                 <ClipboardList className="text-[#bc004f]" size={20} />
@@ -486,7 +585,7 @@ const Lotes = () => {
                 </div>
               )}
 
-              {lotes.map(lote => {
+              {lotes.map((lote, index) => {
                 const imgSource = lote.Producto?.imagen
                   ? `${API_BASE}/uploads/${lote.Producto.imagen}`
                   : "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae";
@@ -494,7 +593,12 @@ const Lotes = () => {
                 const estado = getEstadoCaducidad(lote.fecha_caducidad);
 
                 return (
-                  <div key={lote.id_registro_lote || lote.id} className={`group relative p-4 rounded-2xl shadow-sm border flex items-center gap-5 transition-all overflow-hidden ${verAgotados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200 hover:shadow-md hover:border-[#FA8072]/30'}`}>
+                  <div 
+                    key={lote.id_registro_lote || lote.id} 
+                    data-aos="fade-up" 
+                    data-aos-delay={(index % 10) * 50}
+                    className={`group relative p-4 rounded-2xl shadow-sm border flex items-center gap-5 transition-all overflow-hidden ${verAgotados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200 hover:shadow-md hover:border-[#FA8072]/30'}`}
+                  >
 
                     {/* ACCIONES HOVER */}
                     <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-opacity duration-300 z-10 backdrop-blur-sm">
@@ -529,9 +633,10 @@ const Lotes = () => {
                         <p className="text-sm text-gray-600 flex items-center gap-1">
                           <Hash size={14} className="text-gray-400" /> <span className="font-semibold">Lote:</span> {lote.codigo_lote_fisico}
                         </p>
+                        {/* Se resalta la cantidad si hay 5 o menos para llamar visualmente la atención */}
                         <p className="text-sm text-gray-600 flex items-center gap-1">
-                          <Package size={14} className={verAgotados ? "text-gray-400" : "text-[#FA8072]"} />
-                          <span className={`font-semibold ${verAgotados ? "text-gray-400" : "text-gray-800"}`}>
+                          <Package size={14} className={verAgotados ? "text-gray-400" : (lote.cantidad <= 5 ? "text-orange-500" : "text-[#FA8072]")} />
+                          <span className={`font-semibold ${verAgotados ? "text-gray-400" : (lote.cantidad <= 5 ? "text-orange-600" : "text-gray-800")}`}>
                             {lote.cantidad} uds
                           </span>
                         </p>
