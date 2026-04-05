@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Swal from 'sweetalert2';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -17,6 +20,15 @@ const Auth = () => {
     rol: ""
   });
 
+  // Inicializar AOS
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      offset: 50,
+    });
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -30,7 +42,6 @@ const Auth = () => {
     e.preventDefault();
 
     try {
-      // Ajuste de ruta: Verifica si tu endpoint de login es /api/usuarios/login o /api/auth/login
       const response = await fetch(`${apiUrl}/api/usuarios/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,20 +56,35 @@ const Auth = () => {
       if (!response.ok) throw new Error(data.message || "Error al iniciar sesión");
 
       // Si el backend responde con un token, lo guardamos
-// Si el backend responde con un token, lo guardamos
       if (data.token) {
         localStorage.setItem("token", data.token);
         
-        // ¡NUEVO! Guardamos también los datos del usuario. 
-        // Revisa si tu backend devuelve data.usuario o data.user y ajusta la palabra
         if (data.usuario) {
           localStorage.setItem("user", JSON.stringify(data.usuario));
         }
       }
-      alert("¡Bienvenido!");
-      window.location.href = "/home";
+      
+      // Alerta de éxito con redirección
+      Swal.fire({
+        icon: 'success',
+        title: '¡Bienvenido!',
+        text: 'Sesión iniciada correctamente.',
+        showConfirmButton: false,
+        timer: 1500,
+        background: '#fffbff',
+        iconColor: '#bc004f'
+      }).then(() => {
+        window.location.href = "/home";
+      });
+
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Acceso denegado',
+        text: error.message,
+        confirmButtonColor: '#bc004f',
+        confirmButtonText: 'Intentar de nuevo'
+      });
     }
   };
 
@@ -67,11 +93,15 @@ const Auth = () => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      return alert("Las contraseñas no coinciden");
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Contraseñas no coinciden',
+        text: 'Por favor, verifica que ambas contraseñas sean iguales.',
+        confirmButtonColor: '#bc004f'
+      });
     }
 
     try {
-      // Ajuste de ruta: Tu endpoint para crear usuarios es /api/usuarios
       const response = await fetch(`${apiUrl}/api/usuarios`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,24 +118,38 @@ const Auth = () => {
 
       if (!response.ok) throw new Error(data.message || "Error al registrar usuario");
 
-      alert("Registro exitoso. Ahora puedes iniciar sesión.");
+      Swal.fire({
+        icon: 'success',
+        title: '¡Registro exitoso!',
+        text: 'Ahora puedes iniciar sesión con tus nuevas credenciales.',
+        confirmButtonColor: '#bc004f'
+      });
+
       // Limpiamos la contraseña y cambiamos a la vista de login
       setFormData((prev) => ({ ...prev, password: "", confirmPassword: "" }));
       setIsLogin(true);
       
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de registro',
+        text: error.message,
+        confirmButtonColor: '#bc004f'
+      });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-pink-50 p-4">
-      <div className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[650px]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-white to-pink-50 p-4 overflow-hidden">
+      <div 
+        data-aos="zoom-in" 
+        className="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[600px] lg:min-h-[650px]"
+      >
         
-        {/* Panel de imagen */}
+        {/* 🔥 PANEL DE IMAGEN (FIJO Y DESLIZANTE CON TRANSFORM) */}
         <div 
-          className={`hidden lg:block absolute top-0 w-1/2 h-full transition-all duration-700 ease-in-out z-20 ${
-            isLogin ? "right-0" : "left-0"
+          className={`hidden lg:block absolute top-0 left-0 w-1/2 h-full transition-transform duration-700 ease-in-out z-20 ${
+            isLogin ? "lg:translate-x-full" : "lg:translate-x-0"
           }`}
         >
           <img
@@ -114,7 +158,7 @@ const Auth = () => {
             alt="Farmacia"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-pink-700/40 to-transparent"></div>
-          <div className="absolute bottom-10 left-8 text-white max-w-sm">
+          <div className="absolute bottom-10 left-8 text-white max-w-sm" data-aos="fade-up" data-aos-delay="300">
             <h2 className="text-4xl font-extrabold mb-3">
               Farmacia Médica Rincón
             </h2>
@@ -124,18 +168,18 @@ const Auth = () => {
           </div>
         </div>
 
-        {/* Contenedor de formularios */}
+        {/* 🔥 CONTENEDOR DE FORMULARIOS (ABSOLUTO Y DESLIZANTE CON TRANSFORM) */}
         <div 
-          className={`w-full lg:w-1/2 transition-all duration-700 ease-in-out ${
-            isLogin ? "lg:translate-x-0" : "lg:translate-x-0 lg:ml-auto"
+          className={`w-full h-full lg:absolute lg:top-0 lg:left-0 lg:w-1/2 transition-transform duration-700 ease-in-out z-10 ${
+            isLogin ? "lg:translate-x-0" : "lg:translate-x-full"
           }`}
         >
           
           {/* FORM LOGIN */}
           {isLogin ? (
-            <div className="p-6 sm:p-8 md:p-10">
-              <div className="text-center mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-pink-200 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <div className="p-6 sm:p-8 md:p-10 lg:p-12 h-full flex flex-col justify-center">
+              <div className="text-center mb-8" data-aos="fade-down" data-aos-delay="100">
+                <div className="w-20 h-20 bg-gradient-to-br from-pink-200 to-pink-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
                   <span className="material-symbols-outlined text-white text-3xl">
                     local_hospital
                   </span>
@@ -149,7 +193,7 @@ const Auth = () => {
               </div>
 
               <form onSubmit={handleLogin} className="space-y-4">
-                <div className="relative">
+                <div className="relative" data-aos="fade-up" data-aos-delay="200">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     mail
                   </span>
@@ -164,7 +208,7 @@ const Auth = () => {
                   />
                 </div>
 
-                <div className="relative">
+                <div className="relative" data-aos="fade-up" data-aos-delay="300">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     lock
                   </span>
@@ -185,7 +229,12 @@ const Auth = () => {
                   </span>
                 </div>
 
-                <button type="submit" className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition flex items-center justify-center gap-2 mt-6">
+                <button 
+                  type="submit" 
+                  data-aos="fade-up" 
+                  data-aos-delay="400"
+                  className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-black transition flex items-center justify-center gap-2 mt-6 active:scale-95"
+                >
                   <span className="material-symbols-outlined text-xl">
                     login
                   </span>
@@ -193,7 +242,7 @@ const Auth = () => {
                 </button>
               </form>
 
-              <p className="text-center text-sm text-gray-500 mt-6">
+              <p className="text-center text-sm text-gray-500 mt-6" data-aos="fade-up" data-aos-delay="500">
                 ¿No tienes cuenta?{" "}
                 <span
                   onClick={() => setIsLogin(false)}
@@ -205,17 +254,19 @@ const Auth = () => {
             </div>
           ) : (
             /* FORM REGISTER */
-            <div className="p-6 sm:p-8 md:p-10">
-              <h1 className="text-2xl font-extrabold text-gray-800 mb-2">
-                Crear cuenta
-              </h1>
-              <p className="text-gray-500 mb-6 text-sm">
-                Completa tus datos para registrarte
-              </p>
+            <div className="p-6 sm:p-8 md:p-10 lg:p-12 h-full flex flex-col justify-center">
+              <div data-aos="fade-down" data-aos-delay="100">
+                <h1 className="text-2xl font-extrabold text-gray-800 mb-2">
+                  Crear cuenta
+                </h1>
+                <p className="text-gray-500 mb-6 text-sm">
+                  Completa tus datos para registrarte
+                </p>
+              </div>
 
               <form onSubmit={handleRegister} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
+                  <div className="relative" data-aos="fade-up" data-aos-delay="200">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                       person
                     </span>
@@ -229,7 +280,7 @@ const Auth = () => {
                     />
                   </div>
 
-                  <div className="relative">
+                  <div className="relative" data-aos="fade-up" data-aos-delay="300">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                       badge
                     </span>
@@ -244,7 +295,7 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative" data-aos="fade-up" data-aos-delay="400">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     mail
                   </span>
@@ -260,7 +311,7 @@ const Auth = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="relative">
+                  <div className="relative" data-aos="fade-up" data-aos-delay="500">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                       lock
                     </span>
@@ -281,7 +332,7 @@ const Auth = () => {
                     </span>
                   </div>
 
-                  <div className="relative">
+                  <div className="relative" data-aos="fade-up" data-aos-delay="600">
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                       lock_clock
                     </span>
@@ -290,7 +341,7 @@ const Auth = () => {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      placeholder="Confirmar contraseña"
+                      placeholder="Confirmar"
                       className="w-full pl-10 pr-10 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:ring-2 focus:ring-pink-300 focus:border-transparent outline-none transition"
                       required
                     />
@@ -303,7 +354,7 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative" data-aos="fade-up" data-aos-delay="700">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">
                     medical_services
                   </span>
@@ -323,7 +374,12 @@ const Auth = () => {
                   </span>
                 </div>
 
-                <button type="submit" className="w-full py-4 bg-gradient-to-r from-pink-600 to-pink-700 hover:from-pink-700 hover:to-pink-800 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-[1.02] mt-6">
+                <button 
+                  type="submit" 
+                  data-aos="fade-up" 
+                  data-aos-delay="800"
+                  className="w-full py-4 bg-[#bc004f] hover:bg-pink-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition transform active:scale-95 mt-6 shadow-md"
+                >
                   <span className="material-symbols-outlined">
                     how_to_reg
                   </span>
@@ -334,7 +390,7 @@ const Auth = () => {
                 </button>
               </form>
 
-              <p className="text-center text-sm text-gray-500 mt-6">
+              <p className="text-center text-sm text-gray-500 mt-6" data-aos="fade-up" data-aos-delay="900">
                 ¿Ya tienes cuenta?{" "}
                 <span
                   onClick={() => setIsLogin(true)}
