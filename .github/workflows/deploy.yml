@@ -1,0 +1,42 @@
+name: Deploy Frontend Vite a Producción
+
+on:
+  push:
+    branches:
+      - main # Cambia esto si tu rama principal se llama 'master'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # --- FASE 1: Construcción en GitHub ---
+      - name: Clonar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Vite compila muy bien con Node 20
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Compilar el proyecto Vite
+        run: npm run build
+
+      # --- FASE 2: Transferencia al Droplet ---
+      - name: Copiar archivos de /dist al servidor
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USERNAME }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          # Enviamos solo el contenido de la carpeta dist
+          source: "dist/*"
+          # La ruta que creamos en el Paso 1
+          target: "/var/www/front-farmacia"
+          # Este comando es vital: quita la carpeta 'dist/' de la ruta 
+          # para que index.html quede directo en la raíz de front-farmacia
+          strip_components: 1 
+          overwrite: true
