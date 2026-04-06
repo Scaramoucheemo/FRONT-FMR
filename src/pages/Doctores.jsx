@@ -299,7 +299,7 @@ const Doctor = () => {
       {success && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-100 text-green-700 p-3 rounded-lg shadow-lg">{success}</div>}
 
       {/* MAIN */}
-      <main className="flex-grow pt-28 px-6 max-w-7xl mx-auto w-full">
+      <main className="flex-grow pt-24 sm:pt-28 px-4 sm:px-6 max-w-7xl mx-auto w-full">
         
         <div className="mb-8" data-aos="fade-down">
           <span className="text-xs text-[#bc004f] font-semibold uppercase tracking-wider">
@@ -310,17 +310,17 @@ const Doctor = () => {
           </h1>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-8 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
           
           {/* COLUMNA IZQUIERDA: FORMULARIO */}
-          <section data-aos="fade-right" className="lg:col-span-5 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
+          <section data-aos="fade-right" className="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-8 shadow-sm border border-gray-200 h-fit">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Información del Médico
             </h2>
             
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               
-              <div className="grid grid-cols-2 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Nombre *</label>
                   <div className="relative">
@@ -337,7 +337,7 @@ const Doctor = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Cédula Prof. *</label>
                   <div className="relative">

@@ -19,10 +19,10 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
 import AOS from 'aos'; // IMPORTAMOS AOS
 import 'aos/dist/aos.css'; // IMPORTAMOS LOS ESTILOS DE AOS
-import { useAlerts} from '../Components/useAlert';
+import { useAlerts } from '../Components/useAlert';
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -48,6 +48,9 @@ const Home = () => {
 
   const [isFabOpen, setIsFabOpen] = useState(false);
   const fabRef = useRef(null);
+
+  const [ventasHoy, setVentasHoy] = useState(0);
+  const [gananciasHoy, setGananciasHoy] = useState(0);
 
   // INICIALIZAR AOS
   useEffect(() => {
@@ -90,6 +93,7 @@ const Home = () => {
         code: p.codigo_barras,
         description: p.presentacion || p.sustancia_activa || "Sin descripción",
         price: p.precio_venta,
+        fecha: p.fecha_caducidad,
         stock: "N/A",
         image: p.imagen ? `${API_BASE}/uploads/${p.imagen}` : "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae"
       })) : [];
@@ -161,7 +165,7 @@ const Home = () => {
 
   const startScanner = () => {
     setIsScannerOpen(true);
-    let yaEscaneado = false; 
+    let yaEscaneado = false;
 
     setTimeout(() => {
       if (!videoRef.current || !codeReader.current) return;
@@ -244,7 +248,7 @@ const Home = () => {
       text: "El producto volverá al catálogo principal de la farmacia.",
       icon: 'info',
       showCancelButton: true,
-      confirmButtonColor: '#10b981', 
+      confirmButtonColor: '#10b981',
       cancelButtonColor: '#9ca3af',
       confirmButtonText: 'Sí, reactivar',
       cancelButtonText: 'Cancelar'
@@ -325,6 +329,44 @@ const Home = () => {
     p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.code?.includes(searchTerm)
   );
 
+  const productosPorVencer = products.filter((p) => {
+    if (!p.fecha) return false;
+
+    const hoy = new Date();
+    const vencimiento = new Date(p.fecha);
+
+    const diff = (vencimiento - hoy) / (1000 * 60 * 60 * 24); // días
+
+    return diff <= 90 && diff > 0; // próximos 3 meses
+  });
+
+  useEffect(() => {
+    const fetchVentas = async () => {
+      try {
+        const data = await api.getVentas();
+
+        const hoy = new Date().toISOString().split("T")[0];
+
+        const ventasDelDia = data.filter((v) =>
+          v.fecha.startsWith(hoy)
+        );
+
+        setVentasHoy(ventasDelDia.length);
+
+        const total = ventasDelDia.reduce(
+          (acc, v) => acc + (v.total || 0),
+          0
+        );
+
+        setGananciasHoy(total);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchVentas();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#fffbff] flex flex-col overflow-x-hidden">
 
@@ -356,7 +398,7 @@ const Home = () => {
         <div className="flex items-center gap-4">
           <div className="relative cursor-pointer" onClick={() => navigate("/alerts")}>
             <Bell className="text-[#bc004f] hover:text-pink-700 transition-colors" />
-            
+
             {alertCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-pulse">
                 {alertCount}
@@ -480,14 +522,20 @@ const Home = () => {
               <p className="text-xs text-gray-400 uppercase tracking-wider">PRODUCTOS ACTIVOS</p>
             </div>
             <div data-aos="zoom-in" data-aos-delay="100" className="bg-pink-50 p-6 rounded-2xl shadow-sm border border-pink-200">
-              <h2 className="text-3xl font-bold text-red-500">0</h2>
+              <h2 className="text-3xl font-bold text-red-500">
+                {productosPorVencer.length}
+              </h2>
               <p className="text-xs text-red-500 uppercase tracking-wider">PRODUCTOS POR VENCER</p>
               <p className="text-[10px] text-gray-400 mt-1">Próximos 3 meses</p>
             </div>
             <div data-aos="zoom-in" data-aos-delay="200" className="bg-black text-white p-6 rounded-2xl shadow-sm">
               <h2 className="text-2xl font-bold">Resumen Diario</h2>
-              <p className="text-xs text-gray-300 mt-2">Ventas del día: --</p>
-              <p className="text-xs text-gray-300">Ganancias: --</p>
+              <p className="text-xs text-gray-300 mt-2">
+                Ventas del día: {ventasHoy}
+              </p>
+              <p className="text-xs text-gray-300">
+                Ganancias: ${gananciasHoy}
+              </p>
             </div>
           </div>
         )}
@@ -500,9 +548,9 @@ const Home = () => {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProducts.map((p, index) => (
-              <div 
-                key={p.id} 
-                data-aos="fade-up" 
+              <div
+                key={p.id}
+                data-aos="fade-up"
                 data-aos-delay={(index % 10) * 50} // Efecto cascada suave que se reinicia cada 10 items
                 className={`group bg-white rounded-3xl shadow-sm overflow-hidden relative border transition-all hover:shadow-lg ${verDescontinuados ? 'border-gray-400 opacity-80' : 'border-gray-200'}`}
               >

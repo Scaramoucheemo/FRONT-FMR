@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAlerts } from "../Components/useAlert";
-import Swal from 'sweetalert2'; 
+import Swal from 'sweetalert2';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import { 
-  Bell, LogOut, Save, Users, CreditCard, Phone, Mail, 
-  User, Pencil, Trash2, Archive, RefreshCw, AlertTriangle, 
+import {
+  Bell, LogOut, Save, Users, CreditCard, Phone, Mail,
+  User, Pencil, Trash2, Archive, RefreshCw, AlertTriangle,
   AlertCircle, Search, ClipboardList, X
 } from "lucide-react";
 
@@ -28,7 +28,7 @@ const Clientes = () => {
   const [verDescontinuados, setVerDescontinuados] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   const [busqueda, setBusqueda] = useState("");
 
   const estadoInicial = {
@@ -38,7 +38,7 @@ const Clientes = () => {
     telefono: "",
     correo: ""
   };
-  
+
   const [form, setForm] = useState(estadoInicial);
 
   // INICIALIZAR AOS
@@ -78,8 +78,8 @@ const Clientes = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      const endpoint = verDescontinuados 
-        ? `${API_BASE}/api/clientes?inactivos=true` 
+      const endpoint = verDescontinuados
+        ? `${API_BASE}/api/clientes?inactivos=true`
         : `${API_BASE}/api/clientes`;
 
       const res = await fetch(endpoint, {
@@ -114,21 +114,21 @@ const Clientes = () => {
     e.preventDefault();
     if (!validateForm()) return;
     setLoading(true); setError(null);
-    
+
     try {
       const token = localStorage.getItem("token");
       const url = isEditing ? `${API_BASE}/api/clientes/${editingId}` : `${API_BASE}/api/clientes`;
       const method = isEditing ? "PUT" : "POST";
-      
+
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify(form)
       });
-      
+
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || data.message || "Error al procesar el cliente");
-      
+
       setSuccess(isEditing ? "Expediente actualizado" : "Cliente registrado exitosamente");
       setForm(estadoInicial);
       setIsEditing(false); setEditingId(null);
@@ -149,7 +149,7 @@ const Clientes = () => {
       telefono: cliente.telefono || "",
       correo: cliente.correo || ""
     });
-    setEditingId(cliente.id_cliente || cliente.id); 
+    setEditingId(cliente.id_cliente || cliente.id);
     setIsEditing(true);
   };
 
@@ -188,7 +188,7 @@ const Clientes = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/clientes/${id}`, {
-        method: "PATCH", 
+        method: "PATCH",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ estado: false })
       });
@@ -203,7 +203,7 @@ const Clientes = () => {
       text: "El cliente volverá al directorio activo.",
       icon: 'info',
       showCancelButton: true,
-      confirmButtonColor: '#10b981', 
+      confirmButtonColor: '#10b981',
       cancelButtonColor: '#9ca3af',
       confirmButtonText: 'Sí, restaurar',
       cancelButtonText: 'Cancelar'
@@ -214,7 +214,7 @@ const Clientes = () => {
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/api/clientes/${id}`, {
-        method: "PATCH", 
+        method: "PATCH",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ estado: true })
       });
@@ -229,7 +229,7 @@ const Clientes = () => {
       text: "Estás a punto de eliminar permanentemente a este cliente. Esta acción no se puede deshacer.",
       icon: 'error',
       showCancelButton: true,
-      confirmButtonColor: '#dc2626', 
+      confirmButtonColor: '#dc2626',
       cancelButtonColor: '#9ca3af',
       confirmButtonText: 'Sí, ELIMINAR',
       cancelButtonText: 'Cancelar'
@@ -261,7 +261,7 @@ const Clientes = () => {
     });
 
     if (result.isConfirmed) {
-      localStorage.clear(); 
+      localStorage.clear();
       navigate("/login");
     }
   };
@@ -273,7 +273,7 @@ const Clientes = () => {
     return nombreCompleto.includes(termino) || curp.includes(termino);
   });
 
-// --- COMPONENTE: HISTORIAL VISUAL (Conectado al Backend) ---
+  // --- COMPONENTE: HISTORIAL VISUAL (Conectado al Backend) ---
   const HistorialDropdown = ({ clienteId, clienteNombre }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [historial, setHistorial] = useState([]);
@@ -294,7 +294,7 @@ const Clientes = () => {
         setIsOpen(false);
         return;
       }
-      
+
       setIsOpen(true);
       if (historial.length > 0) return; // Si ya lo cargamos, no lo volvemos a pedir
 
@@ -305,7 +305,7 @@ const Clientes = () => {
         const res = await fetch(`${API_BASE}/api/ventas`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
-        
+
         if (!res.ok) throw new Error("Error al obtener ventas");
         const todasLasVentas = await res.json();
 
@@ -313,12 +313,12 @@ const Clientes = () => {
         // 1. Que la venta sea de este cliente
         // 2. Extraemos solo los detalles de productos controlados
         const historialControlado = [];
-        
-        
+
+
         todasLasVentas.forEach(venta => {
           const detalles = venta.DetalleVentas || venta.detalle_ventas || venta.DetalleVenta || [];
           if (venta.id_cliente === clienteId && detalles.length > 0) {
-              detalles.forEach(detalle => {
+            detalles.forEach(detalle => {
               // Si el detalle tiene requiere_control en true, lo agregamos al historial
               if (detalle.requiere_control) {
                 historialControlado.push({
@@ -343,13 +343,12 @@ const Clientes = () => {
 
     return (
       <div className="relative h-full w-full" ref={dropdownRef}>
-        <button 
+        <button
           onClick={fetchHistorialCliente}
-          className={`h-full w-full flex flex-col items-center justify-center gap-1 rounded-2xl border-2 transition-all duration-300 outline-none focus:outline-none ${
-            isOpen 
-              ? "bg-[#FA8072] text-white border-[#FA8072] shadow-md" 
+          className={`h-full w-full flex flex-col items-center justify-center gap-1 rounded-2xl border-2 transition-all duration-300 outline-none focus:outline-none ${isOpen
+              ? "bg-[#FA8072] text-white border-[#FA8072] shadow-md"
               : "bg-white text-gray-400 border-dashed border-gray-200 hover:border-[#FA8072] hover:text-[#FA8072] hover:bg-[#FA8072]/5"
-          }`}
+            }`}
         >
           <ClipboardList size={28} />
           <span className="text-[10px] font-bold uppercase tracking-widest text-center mt-1">
@@ -357,21 +356,20 @@ const Clientes = () => {
           </span>
         </button>
 
-        <div className={`absolute right-0 top-full z-50 w-80 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 transform origin-top-right ${
-          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-        }`}>
+        <div className={`absolute right-0 top-full z-50 w-80 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden transition-all duration-200 transform origin-top-right ${isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+          }`}>
           <div className="bg-gray-50 border-b border-gray-100 p-4 flex justify-between items-center">
             <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-2">
-              <ClipboardList size={14}/> Historial de Antibióticos
+              <ClipboardList size={14} /> Historial de Antibióticos
             </span>
-            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors"><X size={16}/></button>
+            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-red-500 transition-colors"><X size={16} /></button>
           </div>
-          
+
           <div className="max-h-64 overflow-y-auto p-4 custom-scrollbar">
             {cargandoHistorial ? (
               <div className="text-center py-4">
-                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#bc004f] mx-auto mb-2"></div>
-                 <p className="text-xs text-gray-500">Consultando recetas...</p>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#bc004f] mx-auto mb-2"></div>
+                <p className="text-xs text-gray-500">Consultando recetas...</p>
               </div>
             ) : historial.length === 0 ? (
               <div className="text-center py-4">
@@ -405,33 +403,94 @@ const Clientes = () => {
   return (
     <div className="min-h-screen bg-[#fffbff] flex flex-col overflow-x-hidden">
       {/* NAVBAR */}
-      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-6 py-4 flex justify-between items-center z-50">
-        <h1 className="font-bold text-lg">Farmacia Médica Rincón</h1>
+      <nav className="fixed top-0 w-full bg-white/80 backdrop-blur border-b px-4 sm:px-6 py-4 flex justify-between items-center z-50">
+        <h1 className="font-bold text-sm sm:text-lg truncate">
+          Farmacia Médica Rincón
+        </h1>
+
+        {/* DESKTOP */}
         <div className="hidden md:flex gap-6">
-          <span onClick={() => navigate("/home")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Inventario</span>
-          <span onClick={() => navigate("/ventas")} className="cursor-pointer hover:text-[#bc004f] transition-colors">Ventas</span>
-          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">Directorio de Clientes</span>
+          <span
+            onClick={() => navigate("/home")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Inventario
+          </span>
+          <span
+            onClick={() => navigate("/ventas")}
+            className="cursor-pointer hover:text-[#bc004f] transition-colors"
+          >
+            Ventas
+          </span>
+          <span className="text-[#bc004f] font-bold border-b-2 border-[#bc004f]">
+            Directorio de Clientes
+          </span>
         </div>
-        <div className="flex items-center gap-4">
-<div className="relative cursor-pointer" onClick={() => navigate("/alerts")}>
-            <Bell className="text-[#bc004f] hover:text-pink-700 transition-colors" />
-            
+
+        {/* DERECHA */}
+        <div className="flex items-center gap-3 sm:gap-4">
+
+          {/* ALERTAS */}
+          <div
+            className="relative cursor-pointer"
+            onClick={() => navigate("/alerts")}
+          >
+            <Bell className="text-[#bc004f]" />
             {alertCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white shadow-sm animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
                 {alertCount}
               </span>
             )}
-          </div>          <div className="relative" ref={menuRef}>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <img src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(' ', '+') || 'User'}&background=bc004f&color=fff`} className="w-9 h-9 rounded-full object-cover" alt="Avatar"/>
+          </div>
+
+          {/* USER */}
+          <div ref={menuRef} className="relative">
+            <div
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <img
+                src={`https://ui-avatars.com/api/?name=${currentUser?.nombre?.replace(
+                  " ",
+                  "+"
+                ) || "User"}&background=bc004f&color=fff`}
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full"
+              />
+
+              <span className="hidden md:block text-sm">
+                {currentUser?.nombre?.split(" ")[0] || "Usuario"}
+              </span>
             </div>
+
             {isMenuOpen && (
-              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border">
+              <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-xl w-64 p-2 border z-50">
+
                 <div className="px-3 py-2 border-b mb-2">
-                  <p className="font-semibold text-gray-800">{currentUser?.nombre}</p>
+                  <p className="font-semibold">{currentUser?.nombre}</p>
                   <p className="text-xs text-gray-500">{currentUser?.rol}</p>
                 </div>
-                <button onClick={handleLogout} className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg">
+
+                {/* MOBILE MENU */}
+                <div className="flex flex-col md:hidden border-b mb-2 pb-2">
+                  <button
+                    onClick={() => { navigate("/home"); setIsMenuOpen(false); }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Inventario
+                  </button>
+
+                  <button
+                    onClick={() => { navigate("/ventas"); setIsMenuOpen(false); }}
+                    className="text-left px-3 py-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    Ventas
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex gap-2 p-2 text-red-500 w-full hover:bg-red-50 rounded-lg"
+                >
                   <LogOut size={16} /> Cerrar sesión
                 </button>
               </div>
@@ -441,11 +500,11 @@ const Clientes = () => {
       </nav>
 
       {/* NOTIFICACIONES */}
-      {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg flex items-center gap-2"><AlertCircle size={18}/>{error}</div>}
+      {error && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-red-100 text-red-700 p-3 rounded-lg shadow-lg flex items-center gap-2"><AlertCircle size={18} />{error}</div>}
       {success && <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-40 bg-green-100 text-green-700 p-3 rounded-lg shadow-lg">{success}</div>}
 
       {/* MAIN */}
-      <main className="flex-grow pt-28 px-6 max-w-7xl mx-auto w-full">
+      <main className="flex-grow pt-24 sm:pt-28 px-4 sm:px-6 max-w-7xl mx-auto w-full">
         <div className="mb-8" data-aos="fade-down">
           <span className="text-xs text-[#bc004f] font-semibold uppercase tracking-wider">
             {isEditing ? "✏️ ACTUALIZAR EXPEDIENTE" : "👤 GESTIÓN DE CLIENTES"}
@@ -455,17 +514,17 @@ const Clientes = () => {
           </h1>
         </div>
 
-        <div className="grid lg:grid-cols-12 gap-8 h-full">
-          
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
           {/* COLUMNA IZQUIERDA: FORMULARIO */}
-          <section data-aos="fade-right" className="lg:col-span-5 bg-white rounded-2xl p-8 shadow-sm border border-gray-200 h-fit">
+          <section data-aos="fade-right" className="lg:col-span-5 bg-white rounded-2xl p-5 sm:p-8 ... shadow-sm border border-gray-200 h-fit">
             <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
               <span className="text-[#bc004f]">📋</span> Datos Personales
             </h2>
-            
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-2">Nombre(s) *</label>
                   <div className="relative">
@@ -521,19 +580,18 @@ const Clientes = () => {
 
           {/* COLUMNA DERECHA: DIRECTORIO */}
           <aside data-aos="fade-left" className="lg:col-span-7 flex flex-col h-[750px]">
-            
+
             <div className="flex flex-col gap-4 mb-4">
               <div className="flex justify-between items-center">
                 <h2 className="text-lg font-bold flex items-center gap-2 text-gray-800">
-                  <Users className="text-[#bc004f]" size={20} /> 
+                  <Users className="text-[#bc004f]" size={20} />
                   {verDescontinuados ? "Directorio de Bajas" : "Directorio Activo"}
                 </h2>
-                
-                <button 
+
+                <button
                   onClick={() => setVerDescontinuados(!verDescontinuados)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors outline-none focus:outline-none ${
-                    verDescontinuados ? 'bg-gray-800 text-white' : 'bg-[#FA8072]/10 text-[#FA8072] hover:bg-[#FA8072]/20'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors outline-none focus:outline-none ${verDescontinuados ? 'bg-gray-800 text-white' : 'bg-[#FA8072]/10 text-[#FA8072] hover:bg-[#FA8072]/20'
+                    }`}
                 >
                   <Archive size={14} />
                   {verDescontinuados ? 'Ver Activos' : 'Ver Bajas'}
@@ -542,18 +600,18 @@ const Clientes = () => {
 
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Buscar por nombre o CURP..." 
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o CURP..."
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white shadow-sm rounded-xl border border-gray-200 outline-none focus:outline-none focus:ring-0 focus:border-[#FA8072] transition-colors"
                 />
               </div>
             </div>
-            
+
             <div className="flex-grow overflow-y-auto pr-2 space-y-4 custom-scrollbar pb-10">
-              
+
               {clientesFiltrados.length === 0 && !loading && (
                 <div className="bg-gray-50 rounded-2xl p-8 text-center border-2 border-dashed border-gray-200">
                   <p className="text-gray-500">
@@ -563,35 +621,35 @@ const Clientes = () => {
               )}
 
               {clientesFiltrados.map((cli, index) => (
-                <div 
-                  key={cli.id_cliente || cli.id} 
-                  data-aos="fade-up" 
-                  data-aos-delay={(index % 10) * 50} 
+                <div
+                  key={cli.id_cliente || cli.id}
+                  data-aos="fade-up"
+                  data-aos-delay={(index % 10) * 50}
                   className="flex items-stretch gap-3"
                 >
-                  
+
                   {/* BLOQUE IZQUIERDO: Tarjeta Principal */}
                   <div className={`flex-grow group relative p-5 rounded-2xl shadow-sm border flex flex-col justify-center min-h-[120px] transition-all overflow-hidden ${verDescontinuados ? 'bg-gray-50 border-gray-300 opacity-80' : 'bg-white border-gray-200 hover:shadow-md hover:border-[#FA8072]/30'}`}>
-                    
+
                     {/* ACCIONES HOVER (Solo visibles para el Administrador) */}
                     {isAdmin && (
                       <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-opacity duration-300 z-10 backdrop-blur-sm rounded-2xl">
                         <button onClick={() => handleEdit(cli)} className="bg-white p-3 rounded-full hover:bg-[#FA8072] hover:text-white transition-colors outline-none focus:outline-none" title="Editar expediente">
-                          <Pencil size={18}/>
+                          <Pencil size={18} />
                         </button>
-                        
+
                         {verDescontinuados ? (
                           <>
                             <button onClick={() => handleReactivate(cli.id_cliente || cli.id)} className="bg-white p-3 rounded-full hover:bg-green-500 hover:text-white transition-colors outline-none focus:outline-none" title="Restaurar cliente">
-                              <RefreshCw size={18}/>
+                              <RefreshCw size={18} />
                             </button>
                             <button onClick={() => handleHardDelete(cli.id_cliente || cli.id)} className="bg-white p-3 rounded-full hover:bg-red-900 hover:text-white transition-colors outline-none focus:outline-none" title="Eliminar de forma permanente">
-                              <AlertTriangle size={18}/>
+                              <AlertTriangle size={18} />
                             </button>
                           </>
                         ) : (
                           <button onClick={() => handleDelete(cli.id_cliente || cli.id)} className="bg-white p-3 rounded-full hover:bg-red-500 hover:text-white transition-colors outline-none focus:outline-none" title="Dar de baja">
-                            <Trash2 size={18}/>
+                            <Trash2 size={18} />
                           </button>
                         )}
                       </div>
@@ -606,7 +664,7 @@ const Clientes = () => {
                           {verDescontinuados && <span className="inline-block mt-1 bg-gray-800 text-white text-[10px] font-bold px-2 py-1 rounded-md">INACTIVO</span>}
                         </div>
                       </div>
-                      
+
                       <div className="flex flex-wrap items-center gap-x-4 mt-3 pt-3 border-t border-gray-100">
                         <p className="text-sm font-semibold text-gray-700 flex items-center gap-1">
                           <CreditCard size={14} className="text-[#FA8072]" /> {cli.identificacion}
@@ -627,9 +685,9 @@ const Clientes = () => {
 
                   {/* BLOQUE DERECHO: Botón Historial adaptado a la altura */}
                   <div className="w-28 flex-shrink-0">
-                    <HistorialDropdown 
-                      clienteId={cli.id_cliente || cli.id} 
-                      clienteNombre={`${cli.nombre} ${cli.apellido || ''}`} 
+                    <HistorialDropdown
+                      clienteId={cli.id_cliente || cli.id}
+                      clienteNombre={`${cli.nombre} ${cli.apellido || ''}`}
                     />
                   </div>
 
@@ -637,7 +695,7 @@ const Clientes = () => {
               ))}
             </div>
           </aside>
-          
+
         </div>
       </main>
     </div>
